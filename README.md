@@ -1,4 +1,4 @@
-# Edge & Wax Ski Tuning
+# Edge RX
 
 Website and ordering/scheduling platform for a ski and snowboard tuning side hustle.
 Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no database server to run).
@@ -44,7 +44,7 @@ Your operator login is the `OPERATOR_EMAIL` / `OPERATOR_PASSWORD` from `.env`; t
 | **Resend** (resend.com) | Sends confirmation, "ready" and weekly reminder emails. Verify your domain so mail doesn't land in spam. | Free up to 3,000 emails/month | `RESEND_API_KEY`, `EMAIL_FROM` |
 | **Stripe** (stripe.com), optional | "Pay now" button on bookings via Stripe Checkout. Without it, customers pay at pickup and you mark orders paid. | 2.9% + 30¢ per card payment | `STRIPE_SECRET_KEY` |
 | **Hosting with a persistent disk** | SQLite stores data in a file, so the host must keep files between deploys. Railway, Render (with a disk) or Fly.io all work; set `DATABASE_PATH` to the mounted disk. Vercel/Netlify won't keep the file, so you'd swap to Postgres there. | ~$5 to $7/month | `DATABASE_PATH` |
-| **A domain** | e.g. edgeandwax.com, for the site and email sending | ~$12/year | `APP_URL` |
+| **A domain** | e.g. edgerx.com, for the site and email sending | ~$12/year | `APP_URL` |
 
 Until Resend is set up, emails are **saved to the outbox** at `/admin/reminders` instead of being sent, so everything still works end to end.
 

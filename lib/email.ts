@@ -1,6 +1,6 @@
 import { run } from "./db";
 
-export const BUSINESS_NAME = process.env.BUSINESS_NAME || "Edge & Wax Ski Tuning";
+export const BUSINESS_NAME = process.env.BUSINESS_NAME || "Edge RX";
 export const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
 type Email = { userId: number | null; to: string; subject: string; body: string; kind: string };
