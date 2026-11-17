@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { all, type Equipment } from "@/lib/db";
 import { addDays, todayISO } from "@/lib/services";
+import { unavailableDates } from "@/lib/capacity";
 import BookForm from "./BookForm";
 
 export default async function Book({ searchParams }: { searchParams: Promise<{ service?: string }> }) {
@@ -24,6 +25,7 @@ export default async function Book({ searchParams }: { searchParams: Promise<{ s
           initialService={service === "race" ? "race" : "basic"}
           minPickup={addDays(today, 1)}
           tripDate={user.next_trip_date}
+          unavailable={unavailableDates(addDays(today, 1))}
         />
       </div>
     </main>

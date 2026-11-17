@@ -1,6 +1,7 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { get, run, all, type Order, type Equipment } from "@/lib/db";
@@ -12,6 +13,7 @@ import {
 import { sendEmail, APP_URL, BUSINESS_NAME } from "@/lib/email";
 import { sendWeeklyReminders } from "@/lib/reminders";
 import { paymentsEnabled, createCheckout } from "@/lib/payments";
+import { pickupUnavailable, setDailyCapacity } from "@/lib/capacity";
 
 export type FormState = { error?: string; ok?: string } | undefined;
 
@@ -112,6 +114,8 @@ export async function createOrder(_: FormState, fd: FormData): Promise<FormState
   if (!isDate(pickup) || !isDate(due)) return { error: "Choose a pickup date and a return date." };
   if (pickup <= today) return { error: "Pickup date must be tomorrow or later." };
   if (due <= pickup) return { error: "Return date must be after the pickup date." };
+  const unavailable = pickupUnavailable(pickup);
+  if (unavailable) return { error: `${unavailable} Please choose another pickup date.` };
 
   const price = orderPrice(service, !!baseRepair);
   const res = run(
@@ -191,4 +195,83 @@ export async function sendRemindersNow(): Promise<void> {
   await requireOperator();
   const r = await sendWeeklyReminders();
   redirect(`/admin/reminders?sent=${r.sent}`);
+}
+
+/* ---------- Password reset ---------- */
+
+const hashToken = (t: string) => crypto.createHash("sha256").update(t).digest("hex");
+
+export async function requestPasswordReset(_: FormState, fd: FormData): Promise<FormState> {
+  const email = str(fd, "email").toLowerCase();
+  const u = get<{ id: number; name: string; email: string }>("SELECT id, name, email FROM users WHERE email = ?", email);
+  if (u) {
+    const token = crypto.randomBytes(32).toString("base64url");
+    run("DELETE FROM password_resets WHERE user_id = ?", u.id);
+    run(
+      "INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES (?, ?, datetime('now', '+1 hour'))",
+      hashToken(token), u.id
+    );
+    await sendEmail({
+      userId: u.id, to: u.email, kind: "password-reset",
+      subject: `Reset your ${BUSINESS_NAME} password`,
+      body: [
+        `Hi ${u.name.split(" ")[0]},`, "",
+        "Someone asked to reset the password for your account. If that was you, use this link within 1 hour:", "",
+        `${APP_URL}/reset-password?token=${token}`, "",
+        "If you didn't ask for this, you can ignore this email; your password won't change.", "", BUSINESS_NAME,
+      ].join("\n"),
+    });
+  }
+  // Same answer either way so the form can't be used to discover who has an account
+  return { ok: "If that email has an account, a reset link is on its way. Check your inbox." };
+}
+
+export async function resetPassword(_: FormState, fd: FormData): Promise<FormState> {
+  const token = str(fd, "token");
+  const password = String(fd.get("password") ?? "");
+  if (password.length < 8) return { error: "Password must be at least 8 characters." };
+  if (password !== String(fd.get("confirm") ?? "")) return { error: "The two passwords don't match." };
+  const row = get<{ user_id: number }>(
+    "SELECT user_id FROM password_resets WHERE token_hash = ? AND used = 0 AND expires_at > datetime('now')",
+    hashToken(token)
+  );
+  if (!row) return { error: "This reset link is invalid or has expired. Request a new one." };
+  run("UPDATE users SET password_hash = ? WHERE id = ?", bcrypt.hashSync(password, 10), row.user_id);
+  run("UPDATE password_resets SET used = 1 WHERE user_id = ?", row.user_id);
+  await startSession(row.user_id);
+  const role = get<{ role: string }>("SELECT role FROM users WHERE id = ?", row.user_id)?.role;
+  redirect(role === "operator" ? "/admin" : "/account");
+}
+
+/* ---------- Pickup capacity ---------- */
+
+export async function saveCapacity(_: FormState, fd: FormData): Promise<FormState> {
+  await requireOperator();
+  const n = Number(str(fd, "daily_capacity"));
+  if (!Number.isInteger(n) || n < 0 || n > 500) return { error: "Enter a whole number (0 means no limit)." };
+  setDailyCapacity(n);
+  revalidatePath("/admin/schedule");
+  return { ok: n === 0 ? "Saved. No daily limit." : `Saved. Up to ${n} pickups per day.` };
+}
+
+export async function addBlockedDate(_: FormState, fd: FormData): Promise<FormState> {
+  await requireOperator();
+  const from = str(fd, "from"), to = str(fd, "to") || from;
+  if (!isDate(from) || !isDate(to) || to < from) return { error: "Pick a start date (and an end date on or after it)." };
+  const reason = str(fd, "reason");
+  let d = from, n = 0;
+  while (d <= to && n < 120) {
+    run("INSERT INTO blocked_dates (date, reason) VALUES (?, ?) ON CONFLICT(date) DO UPDATE SET reason = excluded.reason", d, reason);
+    const [y, m, day] = d.split("-").map(Number);
+    d = new Date(Date.UTC(y, m - 1, day + 1)).toISOString().slice(0, 10);
+    n++;
+  }
+  revalidatePath("/admin/schedule");
+  return { ok: `Blocked ${n} day${n === 1 ? "" : "s"}.` };
+}
+
+export async function removeBlockedDate(fd: FormData) {
+  await requireOperator();
+  run("DELETE FROM blocked_dates WHERE date = ?", str(fd, "date"));
+  revalidatePath("/admin/schedule");
 }
