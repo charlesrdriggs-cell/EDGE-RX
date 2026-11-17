@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { get, run, tagCode, ORDER_ROW_SQL, type OrderRow } from "@/lib/db";
-import { SERVICES, BASE_REPAIR, STATUS_LABEL, fmtDate, money, specSummary } from "@/lib/services";
+import { SERVICES, BASE_REPAIR, STATUS_LABEL, fmtDate, money, specSummary, orderLines } from "@/lib/services";
 import { paymentsEnabled, isCheckoutPaid } from "@/lib/payments";
 import { cancelOrder, payOrder } from "@/app/actions";
 import { amountDue, maybeRewardReferral } from "@/lib/referrals";
@@ -52,8 +52,8 @@ export default async function OrderPage({
               <tr><th>Address</th><td>{o.customer_address}</td></tr>
               <tr><th>Phone</th><td>{o.customer_phone}</td></tr>
               {o.notes && <tr><th>Notes</th><td>{o.notes}</td></tr>}
-              <tr><th>{s.name}</th><td>{money(s.priceCents)}</td></tr>
-              {!!o.base_repair && <tr><th>{BASE_REPAIR.name}</th><td>{money(BASE_REPAIR.priceCents)}</td></tr>}
+              <tr><th>{s.name}</th><td>{money(orderLines(o).service)}</td></tr>
+              {!!o.base_repair && <tr><th>{BASE_REPAIR.name}</th><td>{money(orderLines(o).repair)}</td></tr>}
               {o.credit_cents > 0 && <tr><th>Referral credit</th><td>−{money(o.credit_cents)}</td></tr>}
               <tr><th>Total</th><td><strong>{money(amountDue(o))}</strong> · {o.payment_status === "paid" ? "Paid" : "Unpaid"}</td></tr>
             </tbody>

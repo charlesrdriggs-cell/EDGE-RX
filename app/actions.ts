@@ -15,6 +15,7 @@ import { sendEmail, APP_URL, BUSINESS_NAME } from "@/lib/email";
 import { sendWeeklyReminders } from "@/lib/reminders";
 import { paymentsEnabled, createCheckout } from "@/lib/payments";
 import { pickupUnavailable, setDailyCapacity } from "@/lib/capacity";
+import { getPrices, setPrices } from "@/lib/pricing";
 import { cartFromForm, placeShopOrder, shopItems, itemsSummary, cancelExtrasForTune } from "@/lib/shop";
 
 export type FormState = { error?: string; ok?: string } | undefined;
@@ -120,11 +121,14 @@ export async function createOrder(_: FormState, fd: FormData): Promise<FormState
   const unavailable = pickupUnavailable(pickup);
   if (unavailable) return { error: `${unavailable} Please choose another pickup date.` };
 
-  const price = orderPrice(service, !!baseRepair);
+  const prices = getPrices();
+  const price = orderPrice(service, !!baseRepair, prices);
   const res = run(
     `INSERT INTO orders (user_id, equipment_id, service, wax_spec, base_bevel, side_edge, base_repair,
-       pickup_date, due_date, notes, price_cents) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    u.id, equipmentId, service, wax, bevel, side, baseRepair, pickup, due, str(fd, "notes"), price
+       pickup_date, due_date, notes, price_cents, service_cents, repair_cents)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    u.id, equipmentId, service, wax, bevel, side, baseRepair, pickup, due, str(fd, "notes"), price,
+    prices[service], baseRepair ? prices.repair : null
   );
   const orderId = Number(res.lastInsertRowid);
 
@@ -302,4 +306,20 @@ export async function removeBlockedDate(fd: FormData) {
   await requireOperator();
   run("DELETE FROM blocked_dates WHERE date = ?", str(fd, "date"));
   revalidatePath("/admin/schedule");
+}
+
+/* ---------- Tune prices ---------- */
+
+export async function savePrices(_: FormState, fd: FormData): Promise<FormState> {
+  await requireOperator();
+  const parse = (k: string) => {
+    const v = str(fd, k).replace(/^\$/, "");
+    if (!/^\d{1,4}(\.\d{1,2})?$/.test(v)) return NaN;
+    return Math.round(Number(v) * 100);
+  };
+  const p = { basic: parse("basic"), race: parse("race"), repair: parse("repair") };
+  if (Object.values(p).some((n) => !Number.isFinite(n))) return { error: "Enter each price as dollars, e.g. 55 or 54.99." };
+  setPrices(p);
+  revalidatePath("/", "layout");
+  return { ok: `Saved. New bookings use these prices; existing bookings keep the price they were booked at.` };
 }

@@ -39,8 +39,24 @@ export const SERVICES: Record<
 
 export const BASE_REPAIR = { name: "Minor base repair", priceCents: 1500 };
 
-export function orderPrice(service: ServiceId, baseRepair: boolean) {
-  return SERVICES[service].priceCents + (baseRepair ? BASE_REPAIR.priceCents : 0);
+/** Current prices in cents. Defaults come from SERVICES/BASE_REPAIR; the operator can override them in the dashboard. */
+export type Prices = { basic: number; race: number; repair: number };
+export const DEFAULT_PRICES: Prices = {
+  basic: SERVICES.basic.priceCents,
+  race: SERVICES.race.priceCents,
+  repair: BASE_REPAIR.priceCents,
+};
+
+export function orderPrice(service: ServiceId, baseRepair: boolean, prices: Prices = DEFAULT_PRICES) {
+  return prices[service] + (baseRepair ? prices.repair : 0);
+}
+
+/** What an existing order was charged per line (falls back to defaults for orders made before prices were stored). */
+export function orderLines(o: { service: ServiceId; base_repair: number; service_cents?: number | null; repair_cents?: number | null }) {
+  return {
+    service: o.service_cents ?? DEFAULT_PRICES[o.service],
+    repair: o.base_repair ? (o.repair_cents ?? DEFAULT_PRICES.repair) : 0,
+  };
 }
 
 export function money(cents: number) {

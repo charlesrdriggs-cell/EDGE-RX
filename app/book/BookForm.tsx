@@ -4,15 +4,15 @@ import { useActionState, useState } from "react";
 import { createOrder } from "@/app/actions";
 import type { Equipment } from "@/lib/db";
 import {
-  SERVICES, BASE_REPAIR, WAX_SPECS, BASE_BEVELS, SIDE_EDGES, money, orderPrice, addDays, fmtDate, type ServiceId,
+  SERVICES, BASE_REPAIR, WAX_SPECS, BASE_BEVELS, SIDE_EDGES, money, orderPrice, addDays, fmtDate, type ServiceId, type Prices,
 } from "@/lib/services";
 import ExtrasPicker, { type PickerProduct } from "@/app/shop/ExtrasPicker";
 
 export default function BookForm({
-  gear, initialService, minPickup, tripDate, unavailable, products = [],
+  gear, initialService, minPickup, tripDate, unavailable, prices, products = [],
 }: {
   gear: Equipment[]; initialService: ServiceId; minPickup: string; tripDate: string | null;
-  unavailable: Record<string, string>; products?: PickerProduct[];
+  unavailable: Record<string, string>; prices: Prices; products?: PickerProduct[];
 }) {
   let firstOpen = minPickup;
   for (let i = 0; i < 90 && unavailable[firstOpen]; i++) firstOpen = addDays(firstOpen, 1);
@@ -65,7 +65,7 @@ export default function BookForm({
           {(Object.keys(SERVICES) as ServiceId[]).map((id) => (
             <label key={id} className="choice">
               <input type="radio" name="service" value={id} checked={service === id} onChange={() => setService(id)} />
-              <strong style={{ display: "inline" }}>{SERVICES[id].name}</strong> · {money(SERVICES[id].priceCents)}
+              <strong style={{ display: "inline" }}>{SERVICES[id].name}</strong> · {money(prices[id])}
               <div className="muted" style={{ fontSize: "0.88rem" }}>{SERVICES[id].includes.slice(0, 3).join(", ")}…</div>
             </label>
           ))}
@@ -103,7 +103,7 @@ export default function BookForm({
 
         <label className="choice" style={{ marginTop: 4 }}>
           <input type="checkbox" name="base_repair" checked={repair} onChange={(e) => setRepair(e.target.checked)} />
-          <strong style={{ display: "inline" }}>Add {BASE_REPAIR.name}</strong> · +{money(BASE_REPAIR.priceCents)}
+          <strong style={{ display: "inline" }}>Add {BASE_REPAIR.name}</strong> · +{money(prices.repair)}
           <div className="muted" style={{ fontSize: "0.88rem" }}>Fill core shots and gouges in the base.</div>
         </label>
       </div>
@@ -140,7 +140,7 @@ export default function BookForm({
 
       <div className="total">
         <span>Total</span>
-        <span>{money(orderPrice(service, repair) + extras)}</span>
+        <span>{money(orderPrice(service, repair, prices) + extras)}</span>
       </div>
       {Object.keys(unavailable).length > 0 && (
         <p className="hint" style={{ margin: 0 }}>

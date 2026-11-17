@@ -13,7 +13,7 @@ Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no d
 - Forgot-password flow: a one-hour reset link by email.
 - **Shop** (`/shop`): add HOTHANDS warmers, goggle cleaning and other extras while booking, from a booking's page, or on their own. Extras on a tune come back with the gear on its return date; stand-alone orders get their own delivery date.
 
-**Services and pricing** (edit in `lib/services.ts`)
+**Services and pricing** (defaults in `lib/services.ts`; change live prices from the dashboard)
 | Service | Price | Specs captured |
 |---|---|---|
 | Basic Ski Tune | $50 | Wax: Warm, All Season, Cold, Polar |
@@ -25,6 +25,7 @@ Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no d
 - Change status (Scheduled → Picked up → In progress → Ready → Returned). Marking **Ready** emails the customer.
 - Mark orders paid or unpaid.
 - **Printable tags** (4 × 2.6 in, one per pair) with tag number, customer name, pickup date, due date, address, phone, gear description and service specs. Print one, all active, or all pickups for a date.
+- **Prices** (`/admin/prices`): change tune and base repair prices without touching code. Bookings keep the price they were made at.
 - **Schedule & limits:** set a max number of pickups per day and block off dates (vacations, race weekends). Full or blocked days can't be picked when booking.
 - **Retail** (`/admin/shop`): orders to deliver, mark delivered or paid. **Products** (`/admin/shop/products`): add items, set prices and stock (blank = unlimited), hide or reorder them. Starter products ship with **placeholder prices** flagged until you save each one. Tune tags list any extras to bring back.
 - Customer list, and an email log showing every confirmation and reminder.

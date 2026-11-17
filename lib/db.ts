@@ -104,6 +104,9 @@ function migrateReferrals(db: DatabaseSync) {
     db.exec("ALTER TABLE users ADD COLUMN referred_by INTEGER REFERENCES users(id) ON DELETE SET NULL");
   }
   if (!hasColumn(db, "orders", "credit_cents")) db.exec("ALTER TABLE orders ADD COLUMN credit_cents INTEGER NOT NULL DEFAULT 0");
+  // Price of each line at booking time, so later price changes don't rewrite old orders
+  if (!hasColumn(db, "orders", "service_cents")) db.exec("ALTER TABLE orders ADD COLUMN service_cents INTEGER");
+  if (!hasColumn(db, "orders", "repair_cents")) db.exec("ALTER TABLE orders ADD COLUMN repair_cents INTEGER");
   db.exec(`
     CREATE UNIQUE INDEX IF NOT EXISTS users_referral_code ON users(referral_code);
     CREATE TABLE IF NOT EXISTS referral_invites (
@@ -167,6 +170,8 @@ export type Order = {
   stripe_session_id: string | null;
   credit_cents: number;
   created_at: string;
+  service_cents: number | null;
+  repair_cents: number | null;
 };
 
 export type OrderRow = Order & {
