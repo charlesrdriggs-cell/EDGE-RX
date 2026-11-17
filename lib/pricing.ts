@@ -22,3 +22,25 @@ export function setPrices(p: Prices) {
     );
   }
 }
+
+export type PhotoKey = keyof Prices;
+export const PHOTO_KEYS: PhotoKey[] = ["basic", "race", "repair"];
+
+/** Uploaded photo ids for each service (null = none yet). */
+export function getServicePhotos(): Record<PhotoKey, string | null> {
+  const out = { basic: null, race: null, repair: null } as Record<PhotoKey, string | null>;
+  for (const k of PHOTO_KEYS) {
+    out[k] = get<{ value: string }>("SELECT value FROM settings WHERE key = ?", `photo_${k}`)?.value || null;
+  }
+  return out;
+}
+
+export function setServicePhoto(k: PhotoKey, imageId: string | null) {
+  const old = getServicePhotos()[k];
+  if (imageId) {
+    run("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", `photo_${k}`, imageId);
+  } else {
+    run("DELETE FROM settings WHERE key = ?", `photo_${k}`);
+  }
+  return old;
+}

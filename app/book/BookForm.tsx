@@ -9,10 +9,10 @@ import {
 import ExtrasPicker, { type PickerProduct } from "@/app/shop/ExtrasPicker";
 
 export default function BookForm({
-  gear, initialService, minPickup, tripDate, unavailable, prices, products = [],
+  gear, initialService, minPickup, tripDate, unavailable, prices, photos, products = [],
 }: {
   gear: Equipment[]; initialService: ServiceId; minPickup: string; tripDate: string | null;
-  unavailable: Record<string, string>; prices: Prices; products?: PickerProduct[];
+  unavailable: Record<string, string>; prices: Prices; photos?: Record<"basic" | "race" | "repair", string | null>; products?: PickerProduct[];
 }) {
   let firstOpen = minPickup;
   for (let i = 0; i < 90 && unavailable[firstOpen]; i++) firstOpen = addDays(firstOpen, 1);
@@ -64,6 +64,8 @@ export default function BookForm({
         <div className="choices">
           {(Object.keys(SERVICES) as ServiceId[]).map((id) => (
             <label key={id} className="choice">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {photos?.[id] && <img src={photos[id]!} alt="" className="choice-photo" />}
               <input type="radio" name="service" value={id} checked={service === id} onChange={() => setService(id)} />
               <strong style={{ display: "inline" }}>{SERVICES[id].name}</strong> · {money(prices[id])}
               <div className="muted" style={{ fontSize: "0.88rem" }}>{SERVICES[id].includes.slice(0, 3).join(", ")}…</div>
@@ -101,10 +103,14 @@ export default function BookForm({
           </div>
         )}
 
-        <label className="choice" style={{ marginTop: 4 }}>
+        <label className="choice" style={{ marginTop: 4, display: "flex", gap: 14, alignItems: "flex-start" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {photos?.repair && <img src={photos.repair} alt="" className="addon-photo" style={{ width: 64, height: 64 }} />}
+          <div style={{ flex: 1 }}>
           <input type="checkbox" name="base_repair" checked={repair} onChange={(e) => setRepair(e.target.checked)} />
           <strong style={{ display: "inline" }}>Add {BASE_REPAIR.name}</strong> · +{money(prices.repair)}
           <div className="muted" style={{ fontSize: "0.88rem" }}>Fill core shots and gouges in the base.</div>
+          </div>
         </label>
       </div>
 

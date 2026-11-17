@@ -3,6 +3,8 @@ import Link from "next/link";
 import { SERVICES, BASE_REPAIR, money } from "@/lib/services";
 import { getPrices } from "@/lib/pricing";
 import { PHOTOS } from "@/lib/images";
+import { getServicePhotos } from "@/lib/pricing";
+import { mediaUrl } from "@/lib/media";
 
 const TICKER = [
   "Stone grind", "Edge sharpen & bevel", "Hot wax to spec", "Diamond polish",
@@ -12,6 +14,7 @@ const TICKER = [
 export default function Home() {
   const prices = getPrices();
   const services = [SERVICES.basic, SERVICES.race];
+  const photos = getServicePhotos();
   return (
     <main>
       {/* Hero */}
@@ -71,6 +74,7 @@ export default function Home() {
           <div className="grid-2">
             {services.map((s) => (
               <div key={s.id} className={`card service ${s.id === "race" ? "featured" : ""}`}>
+                {photos[s.id] && <img src={mediaUrl(photos[s.id])!} alt={s.name} className="service-photo" />}
                 <span className={`badge ${s.id === "race" ? "accent" : ""}`} style={{ alignSelf: "flex-start" }}>
                   {s.id === "race" ? "Race prep" : "Most popular"}
                 </span>
@@ -85,7 +89,8 @@ export default function Home() {
             ))}
           </div>
           <div className="card addon">
-            <div>
+            {photos.repair && <img src={mediaUrl(photos.repair)!} alt={BASE_REPAIR.name} className="addon-photo" />}
+            <div style={{ flex: 1 }}>
               <h3 style={{ margin: 0 }}>Add-on: {BASE_REPAIR.name}</h3>
               <div className="muted">Core shots and gouges filled before your tune.</div>
             </div>

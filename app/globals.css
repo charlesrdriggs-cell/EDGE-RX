@@ -268,3 +268,15 @@ footer .brand { font-family: var(--display); font-weight: 800; font-size: 1.4rem
 .feature-photo h3 { margin: 0 0 6px; }
 .feature-photo p { margin: 0 0 14px; }
 .feature-photo .more { font-family: var(--display); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--red); }
+
+/* Photo upload (dashboard) */
+.photo-upload { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--line); margin-top: 6px; }
+.photo-upload .thumb { width: 120px; aspect-ratio: 4 / 3; flex-shrink: 0; background: var(--ice); display: grid; place-items: center; overflow: hidden; color: var(--muted); font-size: 0.8rem; text-align: center; }
+.photo-upload .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 480px) { .photo-upload { flex-direction: column; } .photo-upload .thumb { width: 100%; } }
+
+/* Uploaded photos on customer pages */
+.service-photo { display: block; width: calc(100% + 56px); margin: -30px -28px 18px; aspect-ratio: 16 / 9; object-fit: cover; }
+.addon-photo { width: 84px; height: 84px; object-fit: cover; flex-shrink: 0; }
+.choice-photo { display: block; width: calc(100% + 28px); margin: -14px -14px 10px; aspect-ratio: 16 / 7; object-fit: cover; }
+.product-photo { width: 64px; height: 64px; object-fit: cover; flex-shrink: 0; background: var(--ice); }

@@ -218,13 +218,13 @@ export function tagCode(orderId: number) {
 }
 
 /** node:sqlite returns null-prototype objects; normalise to plain typed rows. */
-export function all<T>(sql: string, ...params: (string | number | null)[]): T[] {
+export function all<T>(sql: string, ...params: (string | number | null | Uint8Array)[]): T[] {
   return db().prepare(sql).all(...params).map((r) => ({ ...r }) as T);
 }
-export function get<T>(sql: string, ...params: (string | number | null)[]): T | undefined {
+export function get<T>(sql: string, ...params: (string | number | null | Uint8Array)[]): T | undefined {
   const r = db().prepare(sql).get(...params);
   return r ? ({ ...r } as T) : undefined;
 }
-export function run(sql: string, ...params: (string | number | null)[]) {
+export function run(sql: string, ...params: (string | number | null | Uint8Array)[]) {
   return db().prepare(sql).run(...params);
 }
