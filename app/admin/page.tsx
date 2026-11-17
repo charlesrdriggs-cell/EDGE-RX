@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { amountDue } from "@/lib/referrals";
 import { all, get, tagCode, ORDER_ROW_SQL, type OrderRow } from "@/lib/db";
 import { SERVICES, STATUSES, STATUS_LABEL, fmtDate, money, specSummary, todayISO, addDays } from "@/lib/services";
 import { setStatus, setPaid } from "@/app/actions";
@@ -87,7 +88,9 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                       <form key={`${o.id}-${o.payment_status}`} action={setPaid} className="inline-form">
                         <input type="hidden" name="id" value={o.id} />
                         <input type="hidden" name="paid" value={o.payment_status === "paid" ? "0" : "1"} />
-                        <span style={{ whiteSpace: "nowrap" }}>{money(o.price_cents)}</span>
+                        <span style={{ whiteSpace: "nowrap" }} title={o.credit_cents ? `${money(o.price_cents)} less ${money(o.credit_cents)} referral credit` : undefined}>
+                          {money(amountDue(o))}{o.credit_cents > 0 && <span className="muted"> (credit)</span>}
+                        </span>
                         <button className={`btn sm ${o.payment_status === "paid" ? "light" : "ghost"}`} title="Toggle paid">
                           {o.payment_status === "paid" ? "Paid ✓" : "Mark paid"}
                         </button>

@@ -5,6 +5,7 @@ import { get, run, tagCode, ORDER_ROW_SQL, type OrderRow } from "@/lib/db";
 import { SERVICES, BASE_REPAIR, STATUS_LABEL, fmtDate, money, specSummary } from "@/lib/services";
 import { paymentsEnabled, isCheckoutPaid } from "@/lib/payments";
 import { cancelOrder, payOrder } from "@/app/actions";
+import { amountDue, maybeRewardReferral } from "@/lib/referrals";
 import { extrasByTuneOrder, shopOrderCode } from "@/lib/shop";
 
 export default async function OrderPage({
@@ -24,6 +25,7 @@ export default async function OrderPage({
       if (await isCheckoutPaid(sp.paid, o.id)) {
         run("UPDATE orders SET payment_status = 'paid' WHERE id = ?", o.id);
         o = { ...o, payment_status: "paid" };
+        await maybeRewardReferral(o.id);
       }
     } catch { /* leave unpaid; operator can reconcile */ }
   }
@@ -52,13 +54,14 @@ export default async function OrderPage({
               {o.notes && <tr><th>Notes</th><td>{o.notes}</td></tr>}
               <tr><th>{s.name}</th><td>{money(s.priceCents)}</td></tr>
               {!!o.base_repair && <tr><th>{BASE_REPAIR.name}</th><td>{money(BASE_REPAIR.priceCents)}</td></tr>}
-              <tr><th>Total</th><td><strong>{money(o.price_cents)}</strong> · {o.payment_status === "paid" ? "Paid" : "Unpaid"}</td></tr>
+              {o.credit_cents > 0 && <tr><th>Referral credit</th><td>−{money(o.credit_cents)}</td></tr>}
+              <tr><th>Total</th><td><strong>{money(amountDue(o))}</strong> · {o.payment_status === "paid" ? "Paid" : "Unpaid"}</td></tr>
             </tbody>
           </table>
           <div className="flex" style={{ marginTop: 20 }}>
             {o.payment_status !== "paid" && o.status !== "cancelled" && (
               paymentsEnabled() ? (
-                <form action={payOrder}><input type="hidden" name="id" value={o.id} /><button className="btn accent">Pay {money(o.price_cents)} now</button></form>
+                <form action={payOrder}><input type="hidden" name="id" value={o.id} /><button className="btn accent">Pay {money(amountDue(o))} now</button></form>
               ) : (
                 <span className="muted">Pay at pickup (cash, Venmo or card).</span>
               )

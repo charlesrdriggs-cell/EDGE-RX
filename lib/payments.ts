@@ -1,5 +1,6 @@
 import { APP_URL, BUSINESS_NAME } from "./email";
-import { SERVICES, BASE_REPAIR } from "./services";
+import { SERVICES, BASE_REPAIR, money } from "./services";
+import { amountDue } from "./referrals";
 import type { Order } from "./db";
 
 export const paymentsEnabled = () => Boolean(process.env.STRIPE_SECRET_KEY);
@@ -26,8 +27,13 @@ export async function createCheckout(order: Order, customerEmail: string) {
   p.set("success_url", `${APP_URL}/orders/${order.id}?paid={CHECKOUT_SESSION_ID}`);
   p.set("cancel_url", `${APP_URL}/orders/${order.id}`);
   p.set("metadata[order_id]", String(order.id));
-  const items = [{ name: `${BUSINESS_NAME}: ${SERVICES[order.service].name}`, cents: SERVICES[order.service].priceCents }];
+  let items = [{ name: `${BUSINESS_NAME}: ${SERVICES[order.service].name}`, cents: SERVICES[order.service].priceCents }];
   if (order.base_repair) items.push({ name: BASE_REPAIR.name, cents: BASE_REPAIR.priceCents });
+  if (order.credit_cents > 0) {
+    // Checkout line items can't be negative, so charge one line for the total after the referral credit
+    const names = items.map((i) => i.name).join(" + ");
+    items = [{ name: `${names} (${money(order.credit_cents)} referral credit applied)`, cents: amountDue(order) }];
+  }
   items.forEach((it, i) => {
     p.set(`line_items[${i}][quantity]`, "1");
     p.set(`line_items[${i}][price_data][currency]`, "usd");
