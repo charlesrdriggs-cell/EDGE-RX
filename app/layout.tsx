@@ -25,6 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Link>
             <span className="spacer" />
             <Link href="/#services" className="hide-sm">Services</Link>
+            <Link href="/shop" className="hide-sm">Shop</Link>
             {user?.role === "operator" && <Link href="/admin">Dashboard</Link>}
             {user ? (
               <>
