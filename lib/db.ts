@@ -75,7 +75,45 @@ function init(): DatabaseSync {
       ).run(opEmail, bcrypt.hashSync(opPass, 10), "Operator");
     }
   }
+  migrateReferrals(db);
   return db;
+}
+
+function hasColumn(db: DatabaseSync, table: string, col: string) {
+  return db.prepare(`PRAGMA table_info(${table})`).all().some((c) => (c as { name: string }).name === col);
+}
+
+/** Referral program tables and columns. Safe to run on every start. */
+function migrateReferrals(db: DatabaseSync) {
+  if (!hasColumn(db, "users", "referral_code")) db.exec("ALTER TABLE users ADD COLUMN referral_code TEXT");
+  if (!hasColumn(db, "users", "referred_by")) {
+    db.exec("ALTER TABLE users ADD COLUMN referred_by INTEGER REFERENCES users(id) ON DELETE SET NULL");
+  }
+  if (!hasColumn(db, "orders", "credit_cents")) db.exec("ALTER TABLE orders ADD COLUMN credit_cents INTEGER NOT NULL DEFAULT 0");
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS users_referral_code ON users(referral_code);
+    CREATE TABLE IF NOT EXISTS referral_invites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      referrer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      contact TEXT NOT NULL,
+      channel TEXT NOT NULL,
+      delivery TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE (referrer_id, contact)
+    );
+    CREATE TABLE IF NOT EXISTS credits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      amount_cents INTEGER NOT NULL,
+      reason TEXT NOT NULL,
+      referred_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+      note TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS credits_one_reward_per_referral
+      ON credits(referred_user_id) WHERE reason = 'referral';
+  `);
 }
 
 export function db(): DatabaseSync {
@@ -113,6 +151,7 @@ export type Order = {
   price_cents: number;
   payment_status: string;
   stripe_session_id: string | null;
+  credit_cents: number;
   created_at: string;
 };
 

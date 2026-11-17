@@ -5,12 +5,19 @@ import { all, tagCode, ORDER_ROW_SQL, type Equipment, type OrderRow } from "@/li
 import { SERVICES, STATUS_LABEL, fmtDate, money } from "@/lib/services";
 import ActionForm from "@/app/components/ActionForm";
 import { updateProfile, addEquipment } from "@/app/actions";
+import ReferForm from "./ReferForm";
+import {
+  amountDue, creditBalance, inviteMessage, referralCode, referralLink, referralStats, REFERRAL_REWARD_CENTS,
+} from "@/lib/referrals";
 
 export default async function Account() {
   const u = await requireUser();
   if (u.role === "operator") redirect("/admin");
   const orders = all<OrderRow>(`${ORDER_ROW_SQL} WHERE o.user_id = ? ORDER BY o.pickup_date DESC`, u.id);
   const gear = all<Equipment>("SELECT * FROM equipment WHERE user_id = ? ORDER BY id DESC", u.id);
+  const code = referralCode(u.id);
+  const balance = creditBalance(u.id);
+  const stats = referralStats(u.id);
 
   return (
     <main className="page container stack">
@@ -36,13 +43,38 @@ export default async function Account() {
                     <td>{fmtDate(o.pickup_date)}</td>
                     <td>{fmtDate(o.due_date)}</td>
                     <td><span className={`status ${o.status}`}>{STATUS_LABEL[o.status]}</span></td>
-                    <td>{money(o.price_cents)}{o.payment_status === "paid" ? " ✓" : ""}</td>
+                    <td>{money(amountDue(o))}{o.payment_status === "paid" ? " ✓" : ""}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
+      </div>
+
+      <div className="card" id="refer">
+        <div className="flex between">
+          <h2 style={{ margin: 0 }}>Refer a friend, get {money(REFERRAL_REWARD_CENTS)} off</h2>
+          <span className="badge">Credit: {money(balance)}</span>
+        </div>
+        <p className="muted">
+          Send friends your link or invite them below. For every new customer who signs up and has their first tune,
+          you get {money(REFERRAL_REWARD_CENTS)} off your next booking. Credit comes off automatically when you book.
+        </p>
+        <div className="grid-2">
+          <ReferForm link={referralLink(code)} code={code} shareText={inviteMessage(u, code)} />
+          <div>
+            <table>
+              <tbody>
+                <tr><th>Friends invited</th><td>{stats.invited}</td></tr>
+                <tr><th>Signed up</th><td>{stats.joined}</td></tr>
+                <tr><th>Had their first tune</th><td>{stats.rewarded}</td></tr>
+                <tr><th>Credit earned</th><td>{money(stats.earnedCents)}</td></tr>
+                <tr><th>Available now</th><td><strong>{money(balance)}</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div className="grid-2">

@@ -3,6 +3,8 @@ import { currentUser } from "@/lib/auth";
 import { all, type Equipment } from "@/lib/db";
 import { addDays, todayISO } from "@/lib/services";
 import BookForm from "./BookForm";
+import { creditBalance } from "@/lib/referrals";
+import { money } from "@/lib/services";
 
 export default async function Book({ searchParams }: { searchParams: Promise<{ service?: string }> }) {
   const { service } = await searchParams;
@@ -19,6 +21,9 @@ export default async function Book({ searchParams }: { searchParams: Promise<{ s
           We&apos;ll pick up from <strong>{user.address}</strong> and call <strong>{user.phone}</strong> if we need anything.{" "}
           <a href="/account">Change</a>
         </p>
+        {creditBalance(user.id) > 0 && (
+          <div className="notice">You have {money(creditBalance(user.id))} in referral credit. It comes off this booking automatically.</div>
+        )}
         <BookForm
           gear={gear}
           initialService={service === "race" ? "race" : "basic"}

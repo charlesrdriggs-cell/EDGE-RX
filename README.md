@@ -59,6 +59,17 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://yoursite.com/api/cron/remin
 
 Who gets one: customers who opted in, have no open booking, and haven't had a reminder in the last 6 days. If they saved a trip date, the email mentions it. You can also click **Send reminders now** in the dashboard.
 
+## Referrals
+
+Customers get a referral link (`/r/CODE`) and a **Refer a friend** box on their account page where they can invite people by email or phone number.
+
+- Email invites go out through Resend (or the outbox until it's set up).
+- Text invites go out through Twilio when `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_FROM` are set. Without Twilio, the customer gets a one-tap link to send the same invite from their own phone.
+- A new customer is linked to whoever referred them by the code they signed up with, or else by the first invite sent to their email or phone.
+- The referrer earns **$10 credit** once that new customer's first order is picked up (or paid). Waiting for pickup stops book-and-cancel abuse. One reward per new customer.
+- Credit comes off the referrer's next booking automatically (and is returned if that booking is cancelled). Customers can't refer existing customers or themselves.
+- `/admin/referrals` shows referred customers, every invite, the credit history, and lets you add or remove credit by hand.
+
 ## Code map
 
 - `lib/services.ts`: services, prices, specs, statuses

@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { attachReferrer, applyCreditToOrder, refundOrderCredit, maybeRewardReferral, QUALIFYING_STATUSES } from "@/lib/referrals";
 import { get, run, all, type Order, type Equipment } from "@/lib/db";
 import { currentUser, startSession, endSession, requireUser, requireOperator } from "@/lib/auth";
 import {
@@ -35,6 +36,7 @@ export async function signup(_: FormState, fd: FormData): Promise<FormState> {
     email, bcrypt.hashSync(password, 10), name, phone, address,
     fd.get("reminders") ? 1 : 0, isDate(trip) ? trip : null
   );
+  attachReferrer(Number(res.lastInsertRowid), email, phone, str(fd, "ref"));
   await startSession(Number(res.lastInsertRowid));
   redirect(safeNext(str(fd, "next")) || "/book");
 }
@@ -120,6 +122,7 @@ export async function createOrder(_: FormState, fd: FormData): Promise<FormState
     u.id, equipmentId, service, wax, bevel, side, baseRepair, pickup, due, str(fd, "notes"), price
   );
   const orderId = Number(res.lastInsertRowid);
+  const credit = applyCreditToOrder(u.id, orderId, price);
   const eq = get<Equipment>("SELECT * FROM equipment WHERE id = ?", equipmentId)!;
   const o = get<Order>("SELECT * FROM orders WHERE id = ?", orderId)!;
 
@@ -133,7 +136,9 @@ export async function createOrder(_: FormState, fd: FormData): Promise<FormState
       `Service: ${SERVICES[service].name}${specSummary(o) ? ` (${specSummary(o)})` : ""}`,
       `Pickup: ${fmtDate(pickup, true)} at ${u.address}`,
       `Return: ${fmtDate(due, true)}`,
-      `Total: ${money(price)}`, "",
+      ...(credit
+        ? [`Price: ${money(price)}`, `Referral credit: -${money(credit)}`, `Total due: ${money(price - credit)}`, ""]
+        : [`Total: ${money(price)}`, ""]),
       `Please leave your gear somewhere easy to grab on pickup day, and reply to this email if plans change.`,
       `View your booking: ${APP_URL}/orders/${orderId}`, "", BUSINESS_NAME,
     ].join("\n"),
@@ -144,7 +149,8 @@ export async function createOrder(_: FormState, fd: FormData): Promise<FormState
 export async function cancelOrder(fd: FormData) {
   const u = await requireUser();
   const id = Number(fd.get("id"));
-  run("UPDATE orders SET status = 'cancelled' WHERE id = ? AND user_id = ? AND status = 'scheduled'", id, u.id);
+  const r = run("UPDATE orders SET status = 'cancelled' WHERE id = ? AND user_id = ? AND status = 'scheduled'", id, u.id);
+  if (r.changes) refundOrderCredit(id);
   revalidatePath(`/orders/${id}`);
 }
 
@@ -165,6 +171,8 @@ export async function setStatus(fd: FormData) {
   const status = str(fd, "status");
   if (!(STATUSES as readonly string[]).includes(status)) return;
   run("UPDATE orders SET status = ? WHERE id = ?", status, id);
+  if (status === "cancelled") refundOrderCredit(id);
+  if (QUALIFYING_STATUSES.includes(status)) await maybeRewardReferral(id);
   if (status === "ready") {
     const o = get<Order & { email: string; name: string; address: string }>(
       "SELECT o.*, u.email, u.name, u.address FROM orders o JOIN users u ON u.id = o.user_id WHERE o.id = ?", id
@@ -184,6 +192,7 @@ export async function setPaid(fd: FormData) {
   await requireOperator();
   const paid = str(fd, "paid") === "1" ? "paid" : "unpaid";
   run("UPDATE orders SET payment_status = ? WHERE id = ?", paid, Number(fd.get("id")));
+  if (paid === "paid") await maybeRewardReferral(Number(fd.get("id")));
   revalidatePath("/admin");
 }
 
