@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { money } from "@/lib/services";
 
-export type PickerProduct = { id: number; name: string; description: string; price_cents: number; stock: number | null };
+export type PickerProduct = { id: number; name: string; description: string; price_cents: number; stock: number | null; image?: string | null };
 
 /** Quantity steppers for retail items. Submits qty_<id> fields; reports the running total. */
 export default function ExtrasPicker({
@@ -23,6 +23,8 @@ export default function ExtrasPicker({
         const q = qty[p.id] ?? 0;
         return (
           <div key={p.id} className={`product${q ? " on" : ""}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {p.image && <img src={p.image} alt="" className="product-photo" />}
             <div style={{ flex: 1 }}>
               <strong>{p.name}</strong> · {money(p.price_cents)}
               <div className="muted" style={{ fontSize: "0.88rem" }}>{p.description}</div>

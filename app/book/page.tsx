@@ -4,7 +4,8 @@ import { all, type Equipment } from "@/lib/db";
 import { addDays, todayISO } from "@/lib/services";
 import { unavailableDates } from "@/lib/capacity";
 import { activeProducts } from "@/lib/shop";
-import { getPrices } from "@/lib/pricing";
+import { getPrices, getServicePhotos } from "@/lib/pricing";
+import { mediaUrl } from "@/lib/media";
 import BookForm from "./BookForm";
 import { creditBalance } from "@/lib/referrals";
 import { money } from "@/lib/services";
@@ -34,7 +35,8 @@ export default async function Book({ searchParams }: { searchParams: Promise<{ s
           tripDate={user.next_trip_date}
           unavailable={unavailableDates(addDays(today, 1))}
           prices={getPrices()}
-          products={activeProducts().map(({ id, name, description, price_cents, stock }) => ({ id, name, description, price_cents, stock }))}
+          photos={Object.fromEntries(Object.entries(getServicePhotos()).map(([k, v]) => [k, mediaUrl(v)])) as Record<"basic" | "race" | "repair", string | null>}
+          products={activeProducts().map(({ id, name, description, price_cents, stock, image_id }) => ({ id, name, description, price_cents, stock, image: mediaUrl(image_id) }))}
         />
       </div>
     </main>

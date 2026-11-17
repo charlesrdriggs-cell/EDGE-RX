@@ -18,6 +18,8 @@ export type Product = {
   /** 0 until the operator saves the product: seeded prices are placeholders */
   price_confirmed: number;
   sort: number;
+  /** uploaded photo id (see lib/media.ts) */
+  image_id: string | null;
 };
 
 export type ShopOrder = {
@@ -42,7 +44,7 @@ export const SHOP_STATUS_LABEL: Record<string, string> = { pending: "To deliver"
 export const MAX_QTY = 20;
 
 // Placeholder prices: the operator confirms or changes each one at /admin/shop/products.
-const SEED: Omit<Product, "id" | "active" | "price_confirmed">[] = [
+const SEED: Omit<Product, "id" | "active" | "price_confirmed" | "image_id">[] = [
   { name: "HOTHANDS Hand Warmers (pair)", description: "Air-activated hand warmers. Slip them in your gloves or pockets for hours of heat.", price_cents: 300, stock: 50, sort: 10 },
   { name: "HOTHANDS Toe Warmers (pair)", description: "Thin adhesive warmers that sit on top of your toes inside ski boots.", price_cents: 350, stock: 50, sort: 20 },
   { name: "HOTHANDS Foot Warmers (insoles)", description: "Full-foot warming insoles for the coldest days on the hill.", price_cents: 400, stock: 30, sort: 30 },
@@ -85,6 +87,8 @@ function ensure() {
       qty INTEGER NOT NULL
     );
   `);
+  const cols = all<{ name: string }>("PRAGMA table_info(products)");
+  if (!cols.some((c) => c.name === "image_id")) db().exec("ALTER TABLE products ADD COLUMN image_id TEXT");
   const n = get<{ n: number }>("SELECT COUNT(*) n FROM products")?.n ?? 0;
   if (n === 0) {
     for (const p of SEED) {
@@ -263,4 +267,11 @@ export function attachableTuneOrders(userId: number) {
 
 export function minDeliverDate() {
   return addDays(todayISO(), 1);
+}
+
+export function setProductImage(id: number, imageId: string | null) {
+  ensure();
+  const old = get<{ image_id: string | null }>("SELECT image_id FROM products WHERE id = ?", id)?.image_id ?? null;
+  run("UPDATE products SET image_id = ? WHERE id = ?", imageId, id);
+  return old;
 }

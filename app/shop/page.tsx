@@ -4,13 +4,14 @@ import { tagCode } from "@/lib/db";
 import { money } from "@/lib/services";
 import { activeProducts, attachableTuneOrders, minDeliverDate } from "@/lib/shop";
 import ShopForm from "./ShopForm";
+import { mediaUrl } from "@/lib/media";
 
 export const dynamic = "force-dynamic";
 
 export default async function Shop({ searchParams }: { searchParams: Promise<{ tune?: string }> }) {
   const { tune } = await searchParams;
   const user = await currentUser();
-  const products = activeProducts().map(({ id, name, description, price_cents, stock }) => ({ id, name, description, price_cents, stock }));
+  const products = activeProducts().map(({ id, name, description, price_cents, stock, image_id }) => ({ id, name, description, price_cents, stock, image: mediaUrl(image_id) }));
   return (
     <main className="page container">
       <div style={{ maxWidth: 720, margin: "0 auto" }} className="stack">
@@ -32,6 +33,8 @@ export default async function Shop({ searchParams }: { searchParams: Promise<{ t
             <div className="products">
               {products.map((p) => (
                 <div key={p.id} className="product">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {p.image && <img src={p.image} alt="" className="product-photo" />}
                   <div style={{ flex: 1 }}>
                     <strong>{p.name}</strong>
                     <div className="muted" style={{ fontSize: "0.88rem" }}>{p.description}</div>

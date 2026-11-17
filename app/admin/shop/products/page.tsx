@@ -3,6 +3,8 @@ import { allProducts } from "@/lib/shop";
 import ActionForm from "@/app/components/ActionForm";
 import { saveProductAction } from "@/app/shop-actions";
 import type { Product } from "@/lib/shop";
+import PhotoUpload from "@/app/components/PhotoUpload";
+import { mediaUrl } from "@/lib/media";
 
 function Fields({ p }: { p?: Product }) {
   return (
@@ -56,6 +58,7 @@ export default async function Products() {
             <ActionForm key={`${p.id}-${p.price_cents}-${p.stock}-${p.active}`} action={saveProductAction} submit="Save">
               <Fields p={p} />
             </ActionForm>
+            <PhotoUpload key={p.image_id ?? "none"} target={`product:${p.id}`} current={mediaUrl(p.image_id)} />
           </div>
         ))}
         <div className="card">
@@ -63,6 +66,7 @@ export default async function Products() {
           <ActionForm action={saveProductAction} submit="Add product">
             <Fields />
           </ActionForm>
+          <p className="hint">You can add a photo once the product is saved.</p>
         </div>
       </div>
     </div>
