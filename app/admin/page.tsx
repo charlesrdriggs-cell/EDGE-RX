@@ -2,6 +2,7 @@ import Link from "next/link";
 import { all, get, tagCode, ORDER_ROW_SQL, type OrderRow } from "@/lib/db";
 import { SERVICES, STATUSES, STATUS_LABEL, fmtDate, money, specSummary, todayISO, addDays } from "@/lib/services";
 import { setStatus, setPaid } from "@/app/actions";
+import { extrasByTuneOrder } from "@/lib/shop";
 
 const VIEWS = {
   active: { label: "Active", where: "o.status IN ('scheduled','picked_up','in_progress','ready')", order: "o.due_date" },
@@ -17,6 +18,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const view = (v && v in VIEWS ? v : "active") as keyof typeof VIEWS;
   const today = todayISO();
   const orders = all<OrderRow>(`${ORDER_ROW_SQL} WHERE ${VIEWS[view].where} ORDER BY ${VIEWS[view].order}, o.id`);
+  const extras = extrasByTuneOrder(orders.map((o) => o.id));
   const count = (sql: string, ...p: string[]) => (get<{ n: number }>(`SELECT COUNT(*) n FROM orders o WHERE ${sql}`, ...p)?.n ?? 0);
 
   const stats = [
@@ -64,6 +66,9 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                       {o.kind === "snowboard" ? "🏂" : "⛷️"} {o.description}
                       <div className="muted">{SERVICES[o.service].name} · {specSummary(o)}</div>
                       {o.notes && <div className="muted" style={{ fontStyle: "italic" }}>“{o.notes}”</div>}
+                      {extras.get(o.id)?.map((x) => (
+                        <div key={x.shopOrderId}><Link href="/admin/shop" className="badge">+ {x.text}</Link></div>
+                      ))}
                     </td>
                     <td style={{ whiteSpace: "nowrap" }}>{fmtDate(o.pickup_date)}{o.pickup_date === today && <div className="badge">Today</div>}</td>
                     <td style={{ whiteSpace: "nowrap", color: overdue ? "var(--danger)" : undefined, fontWeight: overdue ? 700 : undefined }}>

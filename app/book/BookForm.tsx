@@ -6,13 +6,15 @@ import type { Equipment } from "@/lib/db";
 import {
   SERVICES, BASE_REPAIR, WAX_SPECS, BASE_BEVELS, SIDE_EDGES, money, orderPrice, addDays, type ServiceId,
 } from "@/lib/services";
+import ExtrasPicker, { type PickerProduct } from "@/app/shop/ExtrasPicker";
 
 export default function BookForm({
-  gear, initialService, minPickup, tripDate,
-}: { gear: Equipment[]; initialService: ServiceId; minPickup: string; tripDate: string | null }) {
+  gear, initialService, minPickup, tripDate, products = [],
+}: { gear: Equipment[]; initialService: ServiceId; minPickup: string; tripDate: string | null; products?: PickerProduct[] }) {
   const [state, action, pending] = useActionState(createOrder, undefined);
   const [service, setService] = useState<ServiceId>(initialService);
   const [repair, setRepair] = useState(false);
+  const [extras, setExtras] = useState(0);
   const [equip, setEquip] = useState<string>(gear[0] ? String(gear[0].id) : "new");
   const [pickup, setPickup] = useState(minPickup);
   // Suggest a return date: the day before the trip if known, else 3 days after pickup
@@ -121,9 +123,16 @@ export default function BookForm({
         </div>
       </div>
 
+      {products.length > 0 && (
+        <div>
+          <h2>4. Extras <span className="hint">(optional, back with your gear)</span></h2>
+          <ExtrasPicker products={products} onTotal={setExtras} />
+        </div>
+      )}
+
       <div className="total">
         <span>Total</span>
-        <span>{money(orderPrice(service, repair))}</span>
+        <span>{money(orderPrice(service, repair) + extras)}</span>
       </div>
       <button className="btn accent" disabled={pending} style={{ width: "100%" }}>
         {pending ? "Booking…" : "Book pickup"}
