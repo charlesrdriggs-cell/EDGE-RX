@@ -11,6 +11,7 @@ Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no d
 - Get a confirmation email, see their bookings and status, cancel while still scheduled, pay online (if Stripe is on).
 - Weekly reminder emails to book a tune before an upcoming trip (opt out any time on their account page).
 - Forgot-password flow: a one-hour reset link by email.
+- **Shop** (`/shop`): add HOTHANDS warmers, goggle cleaning and other extras while booking, from a booking's page, or on their own. Extras on a tune come back with the gear on its return date; stand-alone orders get their own delivery date.
 
 **Services and pricing** (edit in `lib/services.ts`)
 | Service | Price | Specs captured |
@@ -25,7 +26,8 @@ Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no d
 - Mark orders paid or unpaid.
 - **Printable tags** (4 × 2.6 in, one per pair) with tag number, customer name, pickup date, due date, address, phone, gear description and service specs. Print one, all active, or all pickups for a date.
 - **Schedule & limits:** set a max number of pickups per day and block off dates (vacations, race weekends). Full or blocked days can't be picked when booking.
-- Customer list, and an email log showing every confirmation, reminder and reset email.
+- **Retail** (`/admin/shop`): orders to deliver, mark delivered or paid. **Products** (`/admin/shop/products`): add items, set prices and stock (blank = unlimited), hide or reorder them. Starter products ship with **placeholder prices** flagged until you save each one. Tune tags list any extras to bring back.
+- Customer list, and an email log showing every confirmation and reminder.
 
 ## Run it locally
 
@@ -70,6 +72,7 @@ Who gets one: customers who opted in, have no open booking, and haven't had a re
 - `lib/email.ts`, `lib/reminders.ts`: email sending and the weekly reminder logic
 - `lib/payments.ts`: Stripe Checkout (no SDK needed)
 - `app/actions.ts`: all form handling (signup, booking, status changes)
+- `lib/shop.ts`, `app/shop-actions.ts`, `app/shop/`: retail products, orders and stock
 - `app/book/`: booking form, `app/account/`: customer page, `app/admin/`: operator dashboard and tags
 
 ## Ideas for later

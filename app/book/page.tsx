@@ -3,6 +3,7 @@ import { currentUser } from "@/lib/auth";
 import { all, type Equipment } from "@/lib/db";
 import { addDays, todayISO } from "@/lib/services";
 import { unavailableDates } from "@/lib/capacity";
+import { activeProducts } from "@/lib/shop";
 import BookForm from "./BookForm";
 
 export default async function Book({ searchParams }: { searchParams: Promise<{ service?: string }> }) {
@@ -26,6 +27,7 @@ export default async function Book({ searchParams }: { searchParams: Promise<{ s
           minPickup={addDays(today, 1)}
           tripDate={user.next_trip_date}
           unavailable={unavailableDates(addDays(today, 1))}
+          products={activeProducts().map(({ id, name, description, price_cents, stock }) => ({ id, name, description, price_cents, stock }))}
         />
       </div>
     </main>

@@ -5,6 +5,7 @@ import { get, run, tagCode, ORDER_ROW_SQL, type OrderRow } from "@/lib/db";
 import { SERVICES, BASE_REPAIR, STATUS_LABEL, fmtDate, money, specSummary } from "@/lib/services";
 import { paymentsEnabled, isCheckoutPaid } from "@/lib/payments";
 import { cancelOrder, payOrder } from "@/app/actions";
+import { extrasByTuneOrder, shopOrderCode } from "@/lib/shop";
 
 export default async function OrderPage({
   params, searchParams,
@@ -28,6 +29,8 @@ export default async function OrderPage({
   }
 
   const s = SERVICES[o.service];
+  const extras = extrasByTuneOrder([o.id]).get(o.id) ?? [];
+  const canAddExtras = u.role === "customer" && ["scheduled", "picked_up", "in_progress", "ready"].includes(o.status);
   return (
     <main className="page container">
       <div style={{ maxWidth: 640, margin: "0 auto" }} className="stack">
@@ -65,6 +68,27 @@ export default async function OrderPage({
             )}
           </div>
         </div>
+        {(extras.length > 0 || canAddExtras) && (
+          <div className="card">
+            <h2>Extras</h2>
+            {extras.length === 0 ? (
+              <p className="muted" style={{ marginTop: 0 }}>Want hand warmers or clean goggles? Add them and they come back with your gear.</p>
+            ) : (
+              <table>
+                <tbody>
+                  {extras.map((x) => (
+                    <tr key={x.shopOrderId}>
+                      <th><Link href={`/shop/orders/${x.shopOrderId}`}>{shopOrderCode(x.shopOrderId)}</Link></th>
+                      <td>{x.text}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{money(x.cents)} · {x.paid ? "Paid" : "Unpaid"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {canAddExtras && <Link href={`/shop?tune=${o.id}`} className="btn light sm" style={{ marginTop: 12 }}>Add extras</Link>}
+          </div>
+        )}
         <Link href={u.role === "operator" ? "/admin" : "/account"}>← Back</Link>
       </div>
     </main>

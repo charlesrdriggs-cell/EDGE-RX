@@ -14,6 +14,7 @@ import { sendEmail, APP_URL, BUSINESS_NAME } from "@/lib/email";
 import { sendWeeklyReminders } from "@/lib/reminders";
 import { paymentsEnabled, createCheckout } from "@/lib/payments";
 import { pickupUnavailable, setDailyCapacity } from "@/lib/capacity";
+import { cartFromForm, placeShopOrder, shopItems, itemsSummary, cancelExtrasForTune } from "@/lib/shop";
 
 export type FormState = { error?: string; ok?: string } | undefined;
 
@@ -124,6 +125,19 @@ export async function createOrder(_: FormState, fd: FormData): Promise<FormState
     u.id, equipmentId, service, wax, bevel, side, baseRepair, pickup, due, str(fd, "notes"), price
   );
   const orderId = Number(res.lastInsertRowid);
+
+  // Optional retail extras (warmers, goggle cleaning...) ride back with the tuned gear.
+  const cart = cartFromForm(fd);
+  let extras: { text: string; cents: number } | null = null;
+  if (cart.size) {
+    const r = placeShopOrder({ userId: u.id, cart, tuneOrderId: orderId, deliverDate: due, notes: "" });
+    if ("error" in r) {
+      run("DELETE FROM orders WHERE id = ?", orderId);
+      return { error: r.error };
+    }
+    const items = shopItems(r.id);
+    extras = { text: itemsSummary(items), cents: items.reduce((s, i) => s + i.unit_cents * i.qty, 0) };
+  }
   const eq = get<Equipment>("SELECT * FROM equipment WHERE id = ?", equipmentId)!;
   const o = get<Order>("SELECT * FROM orders WHERE id = ?", orderId)!;
 
@@ -137,7 +151,8 @@ export async function createOrder(_: FormState, fd: FormData): Promise<FormState
       `Service: ${SERVICES[service].name}${specSummary(o) ? ` (${specSummary(o)})` : ""}`,
       `Pickup: ${fmtDate(pickup, true)} at ${u.address}`,
       `Return: ${fmtDate(due, true)}`,
-      `Total: ${money(price)}`, "",
+      ...(extras ? [`Extras (back with your gear): ${extras.text}, ${money(extras.cents)}`] : []),
+      `Total: ${money(price + (extras?.cents ?? 0))}`, "",
       `Please leave your gear somewhere easy to grab on pickup day, and reply to this email if plans change.`,
       `View your booking: ${APP_URL}/orders/${orderId}`, "", BUSINESS_NAME,
     ].join("\n"),
@@ -148,7 +163,8 @@ export async function createOrder(_: FormState, fd: FormData): Promise<FormState
 export async function cancelOrder(fd: FormData) {
   const u = await requireUser();
   const id = Number(fd.get("id"));
-  run("UPDATE orders SET status = 'cancelled' WHERE id = ? AND user_id = ? AND status = 'scheduled'", id, u.id);
+  const r = run("UPDATE orders SET status = 'cancelled' WHERE id = ? AND user_id = ? AND status = 'scheduled'", id, u.id);
+  if (r.changes) cancelExtrasForTune(id);
   revalidatePath(`/orders/${id}`);
 }
 
