@@ -99,7 +99,7 @@ export function fmtDate(d: string | null | undefined, withYear = false) {
 }
 
 export function todayISO() {
-  const tz = process.env.BUSINESS_TIMEZONE || "America/Denver";
+  const tz = process.env.BUSINESS_TIMEZONE || "America/New_York";
   return new Date().toLocaleDateString("en-CA", { timeZone: tz });
 }
 

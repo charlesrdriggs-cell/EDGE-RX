@@ -9,11 +9,13 @@ import ReferForm from "./ReferForm";
 import {
   amountDue, creditBalance, inviteMessage, referralCode, referralLink, referralStats, REFERRAL_REWARD_CENTS,
 } from "@/lib/referrals";
+import { shopOrders, shopItems, itemsSummary, shopOrderCode, SHOP_STATUS_LABEL } from "@/lib/shop";
 
 export default async function Account() {
   const u = await requireUser();
   if (u.role === "operator") redirect("/admin");
   const orders = all<OrderRow>(`${ORDER_ROW_SQL} WHERE o.user_id = ? ORDER BY o.pickup_date DESC`, u.id);
+  const retail = shopOrders("s.user_id = ?", u.id).reverse();
   const gear = all<Equipment>("SELECT * FROM equipment WHERE user_id = ? ORDER BY id DESC", u.id);
   const code = referralCode(u.id);
   const balance = creditBalance(u.id);
@@ -76,6 +78,28 @@ export default async function Account() {
           </div>
         </div>
       </div>
+
+      {retail.length > 0 && (
+        <div className="card">
+          <h2>Shop orders</h2>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Order</th><th>Items</th><th>Delivery</th><th>Status</th><th>Total</th></tr></thead>
+              <tbody>
+                {retail.map((s) => (
+                  <tr key={s.id}>
+                    <td><Link href={`/shop/orders/${s.id}`}>{shopOrderCode(s.id)}</Link></td>
+                    <td>{itemsSummary(shopItems(s.id))}</td>
+                    <td>{fmtDate(s.deliver_date)}{s.tune_order_id ? ` with ${tagCode(s.tune_order_id)}` : ""}</td>
+                    <td>{SHOP_STATUS_LABEL[s.status]}</td>
+                    <td>{money(s.total_cents)}{s.payment_status === "paid" ? " ✓" : ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="grid-2">
         <div className="card">

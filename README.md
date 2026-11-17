@@ -10,6 +10,8 @@ Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no d
 - Book a tune: choose saved gear or add new skis/snowboard, pick a service and specs, add base repair, choose pickup and return (due) dates. Price updates live.
 - Get a confirmation email, see their bookings and status, cancel while still scheduled, pay online (if Stripe is on).
 - Weekly reminder emails to book a tune before an upcoming trip (opt out any time on their account page).
+- Forgot-password flow: a one-hour reset link by email.
+- **Shop** (`/shop`): add HOTHANDS warmers, goggle cleaning and other extras while booking, from a booking's page, or on their own. Extras on a tune come back with the gear on its return date; stand-alone orders get their own delivery date.
 
 **Services and pricing** (edit in `lib/services.ts`)
 | Service | Price | Specs captured |
@@ -23,6 +25,8 @@ Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no d
 - Change status (Scheduled → Picked up → In progress → Ready → Returned). Marking **Ready** emails the customer.
 - Mark orders paid or unpaid.
 - **Printable tags** (4 × 2.6 in, one per pair) with tag number, customer name, pickup date, due date, address, phone, gear description and service specs. Print one, all active, or all pickups for a date.
+- **Schedule & limits:** set a max number of pickups per day and block off dates (vacations, race weekends). Full or blocked days can't be picked when booking.
+- **Retail** (`/admin/shop`): orders to deliver, mark delivered or paid. **Products** (`/admin/shop/products`): add items, set prices and stock (blank = unlimited), hide or reorder them. Starter products ship with **placeholder prices** flagged until you save each one. Tune tags list any extras to bring back.
 - Customer list, and an email log showing every confirmation and reminder.
 
 ## Run it locally
@@ -36,6 +40,8 @@ npm run dev              # http://localhost:3000
 ```
 
 Your operator login is the `OPERATOR_EMAIL` / `OPERATOR_PASSWORD` from `.env`; the account is created on first start.
+
+**Going live?** Follow [DEPLOY.md](DEPLOY.md) for step-by-step Railway, Resend, reminders and Stripe setup.
 
 ## Accounts you'll need
 
@@ -51,7 +57,7 @@ Until Resend is set up, emails are **saved to the outbox** at `/admin/reminders`
 ## Weekly reminders
 
 `GET /api/cron/reminders` with header `Authorization: Bearer <CRON_SECRET>` sends the weekly batch.
-Point any scheduler at it once a week (Railway/Render cron jobs, cron-job.org, or GitHub Actions), e.g. Thursdays before the weekend:
+The included GitHub Action (`.github/workflows/weekly-reminders.yml`) calls it every Thursday morning; see DEPLOY.md. Any other scheduler works too:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" https://yoursite.com/api/cron/reminders
@@ -77,11 +83,10 @@ Customers get a referral link (`/r/CODE`) and a **Refer a friend** box on their 
 - `lib/email.ts`, `lib/reminders.ts`: email sending and the weekly reminder logic
 - `lib/payments.ts`: Stripe Checkout (no SDK needed)
 - `app/actions.ts`: all form handling (signup, booking, status changes)
+- `lib/shop.ts`, `app/shop-actions.ts`, `app/shop/`: retail products, orders and stock
 - `app/book/`: booking form, `app/account/`: customer page, `app/admin/`: operator dashboard and tags
 
 ## Ideas for later
 
-- Daily pickup capacity limits and blocked-out dates
 - Text message (SMS) reminders via Twilio
 - QR code on tags that opens the order
-- Password reset by email

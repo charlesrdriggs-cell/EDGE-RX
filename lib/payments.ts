@@ -5,7 +5,7 @@ import type { Order } from "./db";
 
 export const paymentsEnabled = () => Boolean(process.env.STRIPE_SECRET_KEY);
 
-async function stripe(path: string, init?: { method?: string; body?: URLSearchParams }) {
+export async function stripe(path: string, init?: { method?: string; body?: URLSearchParams }) {
   const res = await fetch(`https://api.stripe.com/v1/${path}`, {
     method: init?.method || "GET",
     headers: {

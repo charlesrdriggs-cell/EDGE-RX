@@ -4,19 +4,26 @@ import { useActionState, useState } from "react";
 import { createOrder } from "@/app/actions";
 import type { Equipment } from "@/lib/db";
 import {
-  SERVICES, BASE_REPAIR, WAX_SPECS, BASE_BEVELS, SIDE_EDGES, money, orderPrice, addDays, type ServiceId,
+  SERVICES, BASE_REPAIR, WAX_SPECS, BASE_BEVELS, SIDE_EDGES, money, orderPrice, addDays, fmtDate, type ServiceId,
 } from "@/lib/services";
+import ExtrasPicker, { type PickerProduct } from "@/app/shop/ExtrasPicker";
 
 export default function BookForm({
-  gear, initialService, minPickup, tripDate,
-}: { gear: Equipment[]; initialService: ServiceId; minPickup: string; tripDate: string | null }) {
+  gear, initialService, minPickup, tripDate, unavailable, products = [],
+}: {
+  gear: Equipment[]; initialService: ServiceId; minPickup: string; tripDate: string | null;
+  unavailable: Record<string, string>; products?: PickerProduct[];
+}) {
+  let firstOpen = minPickup;
+  for (let i = 0; i < 90 && unavailable[firstOpen]; i++) firstOpen = addDays(firstOpen, 1);
   const [state, action, pending] = useActionState(createOrder, undefined);
   const [service, setService] = useState<ServiceId>(initialService);
   const [repair, setRepair] = useState(false);
+  const [extras, setExtras] = useState(0);
   const [equip, setEquip] = useState<string>(gear[0] ? String(gear[0].id) : "new");
-  const [pickup, setPickup] = useState(minPickup);
+  const [pickup, setPickup] = useState(firstOpen);
   // Suggest a return date: the day before the trip if known, else 3 days after pickup
-  const suggestedDue = tripDate && tripDate > addDays(minPickup, 1) ? addDays(tripDate, -1) : addDays(minPickup, 3);
+  const suggestedDue = tripDate && tripDate > addDays(firstOpen, 1) ? addDays(tripDate, -1) : addDays(firstOpen, 3);
   const [due, setDue] = useState(suggestedDue);
 
   return (
@@ -109,6 +116,9 @@ export default function BookForm({
             <label>Pickup date</label>
             <input type="date" name="pickup_date" min={minPickup} value={pickup} required
               onChange={(e) => { setPickup(e.target.value); if (due <= e.target.value) setDue(addDays(e.target.value, 2)); }} />
+            {unavailable[pickup] && (
+              <div className="error" style={{ marginTop: 8, marginBottom: 0 }}>{unavailable[pickup]}. Please pick another day.</div>
+            )}
           </div>
           <div className="field">
             <label>Return (due) date</label>
@@ -121,13 +131,28 @@ export default function BookForm({
         </div>
       </div>
 
+      {products.length > 0 && (
+        <div>
+          <h2>4. Extras <span className="hint">(optional, back with your gear)</span></h2>
+          <ExtrasPicker products={products} onTotal={setExtras} />
+        </div>
+      )}
+
       <div className="total">
         <span>Total</span>
-        <span>{money(orderPrice(service, repair))}</span>
+        <span>{money(orderPrice(service, repair) + extras)}</span>
       </div>
-      <button className="btn accent" disabled={pending} style={{ width: "100%" }}>
+      {Object.keys(unavailable).length > 0 && (
+        <p className="hint" style={{ margin: 0 }}>
+          Unavailable for pickup: {Object.keys(unavailable).sort().slice(0, 8).map((d) => fmtShort(d)).join(", ")}
+          {Object.keys(unavailable).length > 8 ? ", …" : ""}
+        </p>
+      )}
+      <button className="btn accent" disabled={pending || !!unavailable[pickup]} style={{ width: "100%" }}>
         {pending ? "Booking…" : "Book pickup"}
       </button>
     </form>
   );
 }
+
+const fmtShort = (d: string) => fmtDate(d).replace(/^\w+, /, "");

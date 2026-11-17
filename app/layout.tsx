@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { currentUser } from "@/lib/auth";
 import { BUSINESS_NAME } from "@/lib/email";
+import LogoMark from "@/app/components/LogoMark";
 
 export const metadata: Metadata = {
   title: BUSINESS_NAME,
@@ -17,14 +18,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <nav className="nav">
           <div className="container">
             <Link href="/" className="logo">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path d="M2 20 9 7l4 6 3-4 6 11H2Z" fill="#fff" />
-                <path d="M9 7 7.2 10.3 9 9.5l1.6 1L9 7Z" fill="#12406b" />
-              </svg>
+              <LogoMark size={30} />
               {BUSINESS_NAME}
             </Link>
             <span className="spacer" />
             <Link href="/#services" className="hide-sm">Services</Link>
+            <Link href="/shop" className="hide-sm">Shop</Link>
             {user?.role === "operator" && <Link href="/admin">Dashboard</Link>}
             {user ? (
               <>
