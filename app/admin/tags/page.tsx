@@ -3,6 +3,7 @@ import { all, tagCode, ORDER_ROW_SQL, type OrderRow } from "@/lib/db";
 import { SERVICES, fmtDate, specSummary, todayISO } from "@/lib/services";
 import PrintButton from "./PrintButton";
 import LogoMark from "@/app/components/LogoMark";
+import { extrasByTuneOrder } from "@/lib/shop";
 
 export default async function Tags({ searchParams }: { searchParams: Promise<{ id?: string; date?: string }> }) {
   const sp = await searchParams;
@@ -20,6 +21,7 @@ export default async function Tags({ searchParams }: { searchParams: Promise<{ i
     title = "All active orders";
   }
 
+  const extras = extrasByTuneOrder(orders.map((o) => o.id));
   return (
     <div>
       <div className="no-print card flex between" style={{ marginBottom: 20 }}>
@@ -48,6 +50,7 @@ export default async function Tags({ searchParams }: { searchParams: Promise<{ i
             <div className="line"><small>Phone</small>{o.customer_phone}</div>
             <div className="line"><small>{o.kind === "snowboard" ? "Board" : "Skis"}</small>{o.description}</div>
             <div className="svc">{SERVICES[o.service].name} · {specSummary(o)}</div>
+            {extras.get(o.id)?.map((x) => <div key={x.shopOrderId} className="extras">+ Bring back: {x.text}</div>)}
           </div>
         ))}
         {orders.length === 0 && <p className="muted">No orders match.</p>}

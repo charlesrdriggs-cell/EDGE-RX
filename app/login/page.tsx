@@ -11,7 +11,10 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         <ActionForm action={login} submit="Log in">
           <input type="hidden" name="next" value={next ?? ""} />
           <div className="field"><label>Email</label><input name="email" type="email" required autoComplete="email" /></div>
-          <div className="field"><label>Password</label><input name="password" type="password" required autoComplete="current-password" /></div>
+          <div className="field">
+            <label className="flex between"><span>Password</span><Link href="/forgot-password" className="hint">Forgot password?</Link></label>
+            <input name="password" type="password" required autoComplete="current-password" />
+          </div>
         </ActionForm>
         <p className="muted" style={{ marginTop: 16 }}>New here? <Link href={`/signup${next ? `?next=${next}` : ""}`}>Create an account</Link></p>
       </div>
