@@ -1,6 +1,7 @@
 import { all, type User } from "./db";
 import { sendEmail, BUSINESS_NAME, APP_URL } from "./email";
-import { fmtDate, todayISO } from "./services";
+import { fmtDate, todayISO, money } from "./services";
+import { getPrices } from "./pricing";
 
 /**
  * Weekly reminder: every opted-in customer who has no open order and hasn't had a
@@ -8,6 +9,7 @@ import { fmtDate, todayISO } from "./services";
  * Safe to call more often than weekly; the 6-day window prevents duplicates.
  */
 export async function sendWeeklyReminders() {
+  const prices = getPrices();
   const today = todayISO();
   const users = all<User>(
     `SELECT u.* FROM users u
@@ -34,7 +36,7 @@ export async function sendWeeklyReminders() {
         ? `You told us you're skiing on ${fmtDate(trip, true)}. Book a pickup a few days before and your gear will be sharp and waxed when you leave.`
         : "Got a trip coming up? Schedule a pickup and we'll have your skis or board sharpened, waxed and back at your door before you go.",
       "",
-      "Basic Ski Tune $50 · Race Day Tune $65 · Minor base repair +$15",
+      `Basic Ski Tune ${money(prices.basic)} · Race Day Tune ${money(prices.race)} · Minor base repair +${money(prices.repair)}`,
       "Pickup and drop off included.",
       "",
       `Book a pickup: ${APP_URL}/book`,

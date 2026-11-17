@@ -4,6 +4,7 @@ import { all, type Equipment } from "@/lib/db";
 import { addDays, todayISO } from "@/lib/services";
 import { unavailableDates } from "@/lib/capacity";
 import { activeProducts } from "@/lib/shop";
+import { getPrices } from "@/lib/pricing";
 import BookForm from "./BookForm";
 import { creditBalance } from "@/lib/referrals";
 import { money } from "@/lib/services";
@@ -32,6 +33,7 @@ export default async function Book({ searchParams }: { searchParams: Promise<{ s
           minPickup={addDays(today, 1)}
           tripDate={user.next_trip_date}
           unavailable={unavailableDates(addDays(today, 1))}
+          prices={getPrices()}
           products={activeProducts().map(({ id, name, description, price_cents, stock }) => ({ id, name, description, price_cents, stock }))}
         />
       </div>

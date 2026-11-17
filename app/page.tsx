@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { SERVICES, BASE_REPAIR, money } from "@/lib/services";
+import { getPrices } from "@/lib/pricing";
 
 export default function Home() {
   const services = [SERVICES.basic, SERVICES.race];
+  const prices = getPrices();
   return (
     <main>
       <section className="hero">
@@ -32,7 +34,7 @@ export default function Home() {
               <div key={s.id} className={`card service ${s.id === "race" ? "featured" : ""}`}>
                 {s.id === "race" && <span className="badge accent" style={{ alignSelf: "flex-start" }}>Race prep</span>}
                 <h3 style={{ marginTop: 8 }}>{s.name}</h3>
-                <div className="price">{money(s.priceCents)}</div>
+                <div className="price">{money(prices[s.id])}</div>
                 <p className="muted" style={{ margin: 0 }}>{s.tagline}</p>
                 <ul>{s.includes.map((i) => <li key={i}>{i}</li>)}</ul>
                 <Link href={`/book?service=${s.id}`} className={`btn ${s.id === "race" ? "accent" : ""}`}>
@@ -47,7 +49,7 @@ export default function Home() {
               <div className="muted">Fill core shots and gouges before your tune.</div>
             </div>
             <div className="price" style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--brand)" }}>
-              +{money(BASE_REPAIR.priceCents)}
+              +{money(prices.repair)}
             </div>
           </div>
         </div>

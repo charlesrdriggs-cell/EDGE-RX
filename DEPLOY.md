@@ -1,6 +1,6 @@
 # Putting Edge RX online
 
-This takes about 30 minutes. You'll end up with the site at your own domain, real emails, and weekly reminders running automatically.
+This takes about 30 minutes, and **everything happens in your web browser**: no command line needed. You'll end up with a live site you can manage from the dashboard, real emails, and weekly reminders running automatically.
 
 **Monthly cost:** about $5 (Railway) plus about $12/year for a domain. Resend email is free up to 3,000 emails a month.
 
@@ -73,10 +73,21 @@ Skip this if you're happy taking cash or Venmo at pickup and clicking **Mark pai
 
 ---
 
-## 5. First things to set in the dashboard
+## 5. Text messages with Twilio (optional)
 
+Referral invites can go out by text as well as email. Skip this to start; without it, the invite form only sends email.
+
+1. Sign up at **twilio.com**, buy a phone number (~$1.15/month) and complete the US texting registration (A2P 10DLC) it walks you through.
+2. Add `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_FROM` (your Twilio number, like `+16175551234`) in Railway.
+
+---
+
+## 6. First things to set in the dashboard
+
+- **Prices:** set your Basic, Race Day and base repair prices. Changes go live immediately; existing bookings keep their price.
+- **Retail → Products:** set real prices and stock for warmers, goggle cleaning and anything else you sell. Starter items are flagged until you save them.
 - **Schedule & limits:** set how many pickups you can handle per day, and block off days you're away.
-- Make a test booking with a second email address to see the full customer experience, then cancel it.
+- **Test the referral flow:** sign up as a customer in a private window, copy your link from **My account → Refer a friend**, open it in a second private window and sign up as a friend. Book a tune as the friend, then mark it **Returned** on the dashboard: the first customer gets $10 credit, shown on **Referrals** and taken off their next booking.
 
 ## If something goes wrong
 
