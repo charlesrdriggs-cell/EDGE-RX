@@ -79,16 +79,7 @@ function init(): DatabaseSync {
     );
   `);
 
-  const opEmail = process.env.OPERATOR_EMAIL;
-  const opPass = process.env.OPERATOR_PASSWORD;
-  if (opEmail && opPass) {
-    const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(opEmail);
-    if (!existing) {
-      db.prepare(
-        "INSERT INTO users (email, password_hash, name, role, reminders_opt_in) VALUES (?, ?, ?, 'operator', 0)"
-      ).run(opEmail, bcrypt.hashSync(opPass, 10), "Operator");
-    }
-  }
+  syncOperator(db);
   migrateReferrals(db);
   return db;
 }
@@ -131,6 +122,40 @@ function migrateReferrals(db: DatabaseSync) {
     CREATE UNIQUE INDEX IF NOT EXISTS credits_one_reward_per_referral
       ON credits(referred_user_id) WHERE reason = 'referral';
   `);
+}
+
+/** Tidy a value pasted into a hosting dashboard: drop stray spaces and wrapping quotes. */
+function cleanEnv(v: string | undefined) {
+  const t = (v ?? "").trim();
+  return t.length >= 2 && /^(["']).*\1$/.test(t) ? t.slice(1, -1).trim() : t;
+}
+
+/**
+ * OPERATOR_EMAIL / OPERATOR_PASSWORD are the source of truth for the operator login.
+ * On every start the account is created if missing, given operator access, and its
+ * password reset to OPERATOR_PASSWORD, so changing the variables always takes effect.
+ */
+function syncOperator(db: DatabaseSync) {
+  const email = cleanEnv(process.env.OPERATOR_EMAIL).toLowerCase();
+  const pass = cleanEnv(process.env.OPERATOR_PASSWORD);
+  if (!email || !pass) {
+    console.warn("[auth] OPERATOR_EMAIL / OPERATOR_PASSWORD not set: no operator login is available.");
+    return;
+  }
+  const u = db.prepare("SELECT id, password_hash, role FROM users WHERE email = ?").get(email) as
+    | { id: number; password_hash: string; role: string }
+    | undefined;
+  if (!u) {
+    db.prepare(
+      "INSERT INTO users (email, password_hash, name, role, reminders_opt_in) VALUES (?, ?, ?, 'operator', 0)"
+    ).run(email, bcrypt.hashSync(pass, 10), "Operator");
+    console.log(`[auth] Created operator account ${email}`);
+    return;
+  }
+  if (u.role !== "operator" || !bcrypt.compareSync(pass, u.password_hash)) {
+    db.prepare("UPDATE users SET role = 'operator', password_hash = ? WHERE id = ?").run(bcrypt.hashSync(pass, 10), u.id);
+    console.log(`[auth] Updated operator account ${email} to match OPERATOR_EMAIL / OPERATOR_PASSWORD`);
+  }
 }
 
 export function db(): DatabaseSync {

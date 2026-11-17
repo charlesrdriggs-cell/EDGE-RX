@@ -22,7 +22,7 @@ Railway runs the app straight from your GitHub repo and redeploys every time `ma
    | `DATABASE_PATH` | `/data/app.db` |
    | `SESSION_SECRET` | a long random string (mash the keyboard for 40+ characters) |
    | `OPERATOR_EMAIL` | the email you'll log in with |
-   | `OPERATOR_PASSWORD` | your password (change it later with "Forgot password?" if you like) |
+   | `OPERATOR_PASSWORD` | your password. To change it later, edit this variable; the site picks it up on the next deploy |
    | `CRON_SECRET` | another long random string |
    | `BUSINESS_TIMEZONE` | `America/New_York` (or wherever you operate) |
    | `APP_URL` | fill in after step 5 |
