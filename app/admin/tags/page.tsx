@@ -2,6 +2,7 @@ import Link from "next/link";
 import { all, tagCode, ORDER_ROW_SQL, type OrderRow } from "@/lib/db";
 import { SERVICES, fmtDate, specSummary, todayISO } from "@/lib/services";
 import PrintButton from "./PrintButton";
+import LogoMark from "@/app/components/LogoMark";
 import { extrasByTuneOrder } from "@/lib/shop";
 
 export default async function Tags({ searchParams }: { searchParams: Promise<{ id?: string; date?: string }> }) {
@@ -39,7 +40,7 @@ export default async function Tags({ searchParams }: { searchParams: Promise<{ i
         {orders.map((o) => (
           <div key={o.id} className="tag">
             <div className="hole" />
-            <div className="code">{tagCode(o.id)}</div>
+            <div className="code"><LogoMark size={26} bg="#000" peak="#fff" bevel="" />{tagCode(o.id)}</div>
             <div className="name">{o.customer_name}</div>
             <div className="dates">
               <div><small>Pick up</small><b>{fmtDate(o.pickup_date)}</b></div>

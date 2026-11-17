@@ -121,7 +121,7 @@ footer { padding: 32px 0; color: var(--muted); font-size: 0.88rem; border-top: 1
 .tags { display: flex; flex-wrap: wrap; gap: 16px; }
 .tag { width: 4in; min-height: 2.6in; border: 2px dashed #222; border-radius: 10px; padding: 0.18in 0.22in; background: #fff; color: #000; font-size: 11pt; position: relative; page-break-inside: avoid; break-inside: avoid; }
 .tag .hole { position: absolute; top: 0.14in; right: 0.14in; width: 0.28in; height: 0.28in; border-radius: 50%; border: 2px solid #222; }
-.tag .code { font-family: ui-monospace, Menlo, monospace; font-size: 18pt; font-weight: 800; letter-spacing: 0.04em; }
+.tag .code { display: flex; align-items: center; gap: 8px; font-family: ui-monospace, Menlo, monospace; font-size: 18pt; font-weight: 800; letter-spacing: 0.04em; }
 .tag .name { font-size: 15pt; font-weight: 800; margin: 2px 0 6px; }
 .tag .dates { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid #000; border-radius: 6px; margin: 6px 0; }
 .tag .dates div { padding: 4px 8px; }
