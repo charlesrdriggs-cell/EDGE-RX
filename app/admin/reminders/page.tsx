@@ -1,12 +1,16 @@
 import { all } from "@/lib/db";
-import { sendRemindersNow } from "@/app/actions";
+import { sendRemindersNow, sendTestEmail } from "@/app/actions";
+import { emailProviderOn, emailFrom } from "@/lib/email";
+import { currentUser } from "@/lib/auth";
+import ActionForm from "@/app/components/ActionForm";
 
 type Email = { id: number; to_email: string; subject: string; body: string; kind: string; delivery: string; sent_at: string };
 
 export default async function Reminders({ searchParams }: { searchParams: Promise<{ sent?: string }> }) {
   const { sent } = await searchParams;
   const emails = all<Email>("SELECT * FROM emails ORDER BY id DESC LIMIT 100");
-  const providerOn = Boolean(process.env.RESEND_API_KEY);
+  const providerOn = emailProviderOn();
+  const me = await currentUser();
   return (
     <div className="stack">
       <h1 style={{ margin: 0 }}>Reminders &amp; emails</h1>
@@ -24,6 +28,22 @@ export default async function Reminders({ searchParams }: { searchParams: Promis
           </p>
         )}
         <form action={sendRemindersNow}><button className="btn accent">Send reminders now</button></form>
+      </div>
+      <div className="card">
+        <h2>Email setup</h2>
+        <p className="muted" style={{ marginTop: 0 }}>
+          {providerOn ? (
+            <>Connected to Resend. Emails go out from <code>{emailFrom()}</code>.</>
+          ) : (
+            <>Not connected. Set <code>RESEND_API_KEY</code> and <code>EMAIL_FROM</code> in Railway to send for real.</>
+          )}
+        </p>
+        <ActionForm action={sendTestEmail} submit="Send test email">
+          <div className="field">
+            <label htmlFor="test-to">Send a test to</label>
+            <input id="test-to" name="to" type="email" defaultValue={me?.email ?? ""} required />
+          </div>
+        </ActionForm>
       </div>
       <div className="card" style={{ padding: 0 }}>
         <div className="table-wrap">
