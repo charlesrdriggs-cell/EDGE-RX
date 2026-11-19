@@ -39,15 +39,14 @@ Buy a domain (Namecheap, Cloudflare or Squarespace Domains, ~$12/year), then in 
 
 Until this is set up, emails are saved on the dashboard under **Reminders & emails** instead of being sent.
 
-1. Sign up at **resend.com** (free plan).
-2. **Domains → Add Domain** and enter your domain. Resend lists 3 or 4 DNS records; add them at your domain registrar and click **Verify**. (This is what keeps your emails out of spam. It usually verifies within an hour.)
-3. **API Keys → Create API Key** with "Sending access". Copy it.
-4. In Railway Variables add:
+1. Sign up at **resend.com** (free plan: 3,000 emails/month, 100/day).
+2. **Domains → Add Domain**, enter your domain (e.g. `edge-rx.pro`) and pick the region closest to you (US East). Resend lists DNS records: an **MX** and a **TXT** record on a `send` subdomain (SPF) and a **TXT** record named `resend._domainkey` (DKIM). Add each one at your domain registrar exactly as shown, then click **Verify**. It usually verifies within an hour.
+3. Recommended: also add a **TXT** record named `_dmarc` with value `v=DMARC1; p=none;`. Gmail and Yahoo trust mail more with it.
+4. **API Keys → Create API Key**, permission **Sending access**, domain = your domain. Copy it (it starts with `re_` and is shown only once).
+5. In Railway Variables add (no quotes needed):
    - `RESEND_API_KEY` = the key
-   - `EMAIL_FROM` = `Edge RX <tunes@edgerx.com>` (any address at your verified domain)
-5. Test it: on the site, log out, click **Log in → Forgot password?** and enter your operator email. The reset email should arrive within a minute.
-
----
+   - `EMAIL_FROM` = `Edge RX <tunes@edge-rx.pro>` (any address at your verified domain)
+6. Test it: after Railway redeploys, open **Dashboard → Reminders & emails**, and click **Send test email**. If Resend refuses it, the reason appears right there (most often "domain is not verified", which means waiting for DNS or fixing a record).
 
 ## 3. Weekly reminders on autopilot
 

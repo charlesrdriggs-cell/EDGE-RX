@@ -13,7 +13,7 @@ import {
 } from "@/lib/services";
 import { syncRewards, userIdForOrder } from "@/lib/rewards";
 import { earlySeasonFreeCount } from "@/lib/site";
-import { sendEmail, APP_URL, BUSINESS_NAME } from "@/lib/email";
+import { sendEmail, APP_URL, BUSINESS_NAME, emailProviderOn, emailFrom } from "@/lib/email";
 import { sendWeeklyReminders } from "@/lib/reminders";
 import { paymentsEnabled, createCheckout } from "@/lib/payments";
 import { pickupUnavailable, setDailyCapacity } from "@/lib/capacity";
@@ -333,6 +333,23 @@ export async function sendRemindersNow(): Promise<void> {
   await requireOperator();
   const r = await sendWeeklyReminders();
   redirect(`/admin/reminders?sent=${r.sent}`);
+}
+
+export async function sendTestEmail(_: FormState, fd: FormData): Promise<FormState> {
+  const me = await requireOperator();
+  const to = str(fd, "to") || me.email;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return { error: "Enter a valid email address." };
+  const delivery = await sendEmail({
+    userId: null,
+    to,
+    kind: "test",
+    subject: `Test email from ${BUSINESS_NAME}`,
+    body: `This is a test from ${APP_URL}.\n\nIf you're reading this, email sending works. It was sent from ${emailFrom()}.`,
+  });
+  revalidatePath("/admin/reminders");
+  if (delivery === "sent") return { ok: `Sent to ${to} from ${emailFrom()}. Check the inbox (and spam) in a minute.` };
+  if (delivery === "outbox-only") return { error: "RESEND_API_KEY isn't set, so the test was only saved below, not sent." };
+  return { error: `Resend refused it: ${delivery}` };
 }
 
 /* ---------- Password reset ---------- */
