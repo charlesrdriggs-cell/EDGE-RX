@@ -62,6 +62,14 @@ export async function requireUser(): Promise<User> {
 export async function requireOperator(): Promise<User> {
   const u = await currentUser();
   if (!u) redirect("/login?next=/admin");
-  if (u.role !== "operator") redirect("/account");
+  if (u.role !== "operator") redirect(u.role === "driver" ? "/driver" : "/account");
+  return u;
+}
+
+/** Drivers see their own route; admins can open it too. */
+export async function requireDriver(): Promise<User> {
+  const u = await currentUser();
+  if (!u) redirect("/login?next=/driver");
+  if (u.role !== "driver" && u.role !== "operator") redirect("/account");
   return u;
 }

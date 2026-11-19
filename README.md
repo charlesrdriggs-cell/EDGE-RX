@@ -47,6 +47,12 @@ Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no d
 - **Schedule & limits:** set a max number of pickups per day and block off dates (vacations, race weekends). Full or blocked days can't be picked when booking.
 - **Retail** (`/admin/shop`): orders to deliver, mark delivered or paid. **Products** (`/admin/shop/products`): add items, set prices and stock (blank = unlimited), hide or reorder them. Starter products ship with **placeholder prices** flagged until you save each one. Tune tags list any extras to bring back.
 - Customer list, and an email log showing every confirmation and reminder.
+- **Team & drivers** (`/admin/team`): add more admins or drivers by email, without touching env vars. An existing customer keeps their login; a new person gets a 7-day link to set a password. Only the owner (the `OPERATOR_EMAIL` account) can add or remove admins; any admin can manage drivers.
+- **Assign drivers** (`/admin/dispatch`): every open pickup and delivery (pieces booked together are one stop) with a driver dropdown. The Orders board shows who has each piece's next leg.
+
+**Drivers** at `/driver`
+- A phone-friendly route of only their assigned stops for the next week, with tap-to-call, map links, tags and the amount to collect.
+- **Picked up** moves the booking to Picked up; **Delivered** (once the gear is Ready) moves it to Returned, and can mark it paid when they collected payment.
 
 ## Run it locally
 
@@ -104,6 +110,7 @@ Customers get a referral link (`/r/CODE`) and a **Refer a friend** box on their 
 - `lib/payments.ts`: Stripe Checkout (no SDK needed)
 - `app/actions.ts`: all form handling (signup, booking, status changes)
 - `lib/shop.ts`, `app/shop-actions.ts`, `app/shop/`: retail products, orders and stock
+- `lib/staff.ts`, `app/staff-actions.ts`: admin and driver roles, driver assignment and driver stops
 - `app/book/`: booking form, `app/account/`: customer page, `app/admin/`: operator dashboard and tags
 
 ## Ideas for later

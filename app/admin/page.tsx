@@ -4,6 +4,7 @@ import { all, get, tagCode, pieceNumbers, ORDER_ROW_SQL, type OrderRow } from "@
 import { SERVICES, STATUSES, STATUS_LABEL, fmtDate, money, specSummary, todayISO, addDays } from "@/lib/services";
 import { setStatus, setPaid } from "@/app/actions";
 import { extrasByTuneOrder } from "@/lib/shop";
+import { staff } from "@/lib/staff";
 
 const VIEWS = {
   active: { label: "Active", where: "o.status IN ('scheduled','picked_up','in_progress','ready')", order: "o.due_date" },
@@ -21,6 +22,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const orders = all<OrderRow>(`${ORDER_ROW_SQL} WHERE ${VIEWS[view].where} ORDER BY ${VIEWS[view].order}, o.id`);
   const extras = extrasByTuneOrder(orders.map((o) => o.id));
   const pieces = pieceNumbers(orders);
+  const driverNames = new Map(staff().map((p) => [p.id, p.name.split(" ")[0]]));
   const count = (sql: string, ...p: string[]) => (get<{ n: number }>(`SELECT COUNT(*) n FROM orders o WHERE ${sql}`, ...p)?.n ?? 0);
 
   const stats = [
@@ -65,6 +67,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                       <div className="muted">{o.customer_phone}</div>
                       <div className="muted" style={{ maxWidth: 200 }}>{o.customer_address}</div>
                       {o.customer_pickup_spot && <div className="muted" style={{ maxWidth: 200 }}>📍 {o.customer_pickup_spot}</div>}
+                      <DriverLine o={o} names={driverNames} />
                     </td>
                     <td>
                       {o.kind === "snowboard" ? "🏂" : "⛷️"} {o.owner_name ? <strong>{o.owner_name}: </strong> : null}{o.description}
@@ -110,6 +113,18 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Who is driving this piece's next leg; links to the dispatch page to change it. */
+function DriverLine({ o, names }: { o: OrderRow; names: Map<number, string> }) {
+  const leg = o.status === "scheduled" ? "pickup" : ["picked_up", "in_progress", "ready"].includes(o.status) ? "delivery" : null;
+  if (!leg) return null;
+  const id = leg === "pickup" ? o.pickup_driver_id : o.delivery_driver_id;
+  return (
+    <div className="muted">
+      🚗 <Link href="/admin/dispatch">{id ? `${names.get(id) ?? "Driver"} (${leg})` : `No ${leg} driver`}</Link>
     </div>
   );
 }

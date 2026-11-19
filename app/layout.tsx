@@ -33,9 +33,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Link href="/about" className="hide-sm">About</Link>
             <Link href="/shop" className="hide-sm">Shop</Link>
             {user?.role === "operator" && <Link href="/admin">Dashboard</Link>}
+            {user?.role === "driver" && <Link href="/driver">My route</Link>}
             {user ? (
               <>
-                {user.role === "customer" && <Link href="/account">My account</Link>}
+                {user.role !== "operator" && <Link href="/account" className={user.role === "driver" ? "hide-sm" : undefined}>My account</Link>}
                 <a href="/logout" className="hide-sm">Log out</a>
               </>
             ) : (
