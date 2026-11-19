@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { syncRewards } from "@/lib/rewards";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { run, tagCode } from "@/lib/db";
@@ -22,6 +23,7 @@ export default async function ShopOrderPage({
     try {
       if (await isShopCheckoutPaid(sp.paid, o.id)) {
         run("UPDATE shop_orders SET payment_status = 'paid' WHERE id = ?", o.id);
+        syncRewards(o.user_id);
         o = { ...o, payment_status: "paid" };
       }
     } catch { /* leave unpaid; operator can reconcile */ }

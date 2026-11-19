@@ -10,10 +10,11 @@ export const SERVICES: Record<
 > = {
   basic: {
     id: "basic",
-    name: "Basic Ski Tune",
+    name: "Basic Ski & Snowboard Tune",
     priceCents: 5000,
-    tagline: "Everything your skis need for a great weekend.",
+    tagline: "Everything your skis or snowboard need for a great weekend.",
     includes: [
+      "Skis or snowboards",
       "Stone grind",
       "Edge sharpen & bevel",
       "Hot hand wax to spec: Warm, All Season, Cold or Polar",
@@ -22,7 +23,7 @@ export const SERVICES: Record<
   },
   race: {
     id: "race",
-    name: "Race Day Tune",
+    name: "Performance/Race Day Tune",
     priceCents: 6500,
     tagline: "Precision prep for race day and the fastest skiers.",
     includes: [
@@ -39,17 +40,39 @@ export const SERVICES: Record<
 
 export const BASE_REPAIR = { name: "Minor base repair", priceCents: 1500 };
 
-/** Current prices in cents. Defaults come from SERVICES/BASE_REPAIR; the operator can override them in the dashboard. */
-export type Prices = { basic: number; race: number; repair: number };
+/** At-home "Learn to Tune" session. Booked separately from gear tunes (no pickup). */
+export const LESSON = {
+  name: "Learn to Tune Session",
+  priceCents: 20000,
+  length: "1.5 hours",
+  tagline: "We come to your house, bring our equipment, and teach you how to tune.",
+  proTip: "We can get a family of 4 done while you learn, for the same cost.",
+};
+
+/** #SKIFAST ski team promotion: a Performance/Race Day Tune for a registered racer. */
+export const SKIFAST = { name: "#SKIFAST Ski Team Tune", priceCents: 4000 };
+
+/** Current prices in cents. Defaults come from the constants above; the operator can override them in the dashboard. */
+export type Prices = { basic: number; race: number; repair: number; lesson: number; skifast: number };
 export const DEFAULT_PRICES: Prices = {
   basic: SERVICES.basic.priceCents,
   race: SERVICES.race.priceCents,
   repair: BASE_REPAIR.priceCents,
+  lesson: LESSON.priceCents,
+  skifast: SKIFAST.priceCents,
 };
 
-export function orderPrice(service: ServiceId, baseRepair: boolean, prices: Prices = DEFAULT_PRICES) {
-  return prices[service] + (baseRepair ? prices.repair : 0);
+/** Price of one piece. A #SKIFAST racer's Performance/Race Day Tune is charged at the team price. */
+export function orderPrice(service: ServiceId, baseRepair: boolean, prices: Prices = DEFAULT_PRICES, skifast = false) {
+  const tune = service === "race" && skifast ? prices.skifast : prices[service];
+  return tune + (baseRepair ? prices.repair : 0);
 }
+
+/** Minimum notice for a pickup or an at-home session. */
+export const NOTICE_DAYS = 2;
+
+/** Most pieces of gear in one pickup. */
+export const MAX_PIECES = 12;
 
 /** What an existing order was charged per line (falls back to defaults for orders made before prices were stored). */
 export function orderLines(o: { service: ServiceId; base_repair: number; service_cents?: number | null; repair_cents?: number | null }) {
@@ -88,8 +111,10 @@ export function specSummary(o: {
   base_bevel: string | null;
   side_edge: string | null;
   base_repair: number;
+  racer_name?: string | null;
 }) {
   const parts: string[] = [];
+  if (o.racer_name) parts.push(`#SKIFAST: ${o.racer_name}`);
   if (o.service === "basic" && o.wax_spec) parts.push(`${o.wax_spec} wax`);
   if (o.service === "race") {
     if (o.base_bevel) parts.push(`Base ${o.base_bevel}°`);

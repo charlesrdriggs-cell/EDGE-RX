@@ -280,3 +280,122 @@ footer .brand { font-family: var(--display); font-weight: 800; font-size: 1.4rem
 .addon-photo { width: 84px; height: 84px; object-fit: cover; flex-shrink: 0; }
 .choice-photo { display: block; width: calc(100% + 28px); margin: -14px -14px 10px; aspect-ratio: 16 / 7; object-fit: cover; }
 .product-photo { width: 64px; height: 64px; object-fit: cover; flex-shrink: 0; background: var(--ice); }
+
+/* ---------- Site updates: promos, community, conditions, multi-piece booking ---------- */
+.more { font-family: var(--display); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--red); text-decoration: none; }
+
+/* Charity notice */
+.charity { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; background: #fff; border: 1px solid var(--line); border-left: 6px solid var(--ok); padding: 16px 20px; margin: 8px 0 0; }
+.charity > div:not(.raised) { flex: 1 1 280px; }
+.charity .heart { width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; background: #e8f6ee; color: var(--ok); font-size: 1.3rem; clip-path: var(--cut); }
+.charity .raised { text-align: right; }
+.charity .raised b { display: block; font-family: var(--display); font-weight: 800; font-size: 2rem; line-height: 1; color: var(--ok); }
+.charity .raised small { color: var(--muted); }
+
+/* Learn to Tune + promos */
+.lesson-card { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-top: 20px; border-left: 6px solid var(--navy); }
+.lesson-card .price { font-family: var(--display); font-size: 2.6rem; font-weight: 800; color: var(--navy); line-height: 1; margin-bottom: 8px; }
+.promo { border-top: 4px solid var(--navy); padding: 28px; }
+.promo.red { border-top-color: var(--red); background: linear-gradient(135deg, #fff 0 70%, #fdecea 70%); }
+.promo h2 { font-size: clamp(2rem, 4vw, 2.6rem); margin: 8px 0 6px; }
+.promo-note { background: #fff6e5; border-left: 4px solid var(--warn); padding: 10px 14px; color: var(--ink-2); }
+.promo-banner { background: var(--red); color: #fff; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%); }
+.promo-banner .eyebrow::before { background: #fff; }
+.promo-banner .btn { background: var(--night); }
+
+/* Rewards tracker */
+.tracker { position: relative; height: 18px; background: var(--ice); overflow: hidden; clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
+.tracker i { display: block; height: 100%; background: linear-gradient(90deg, var(--red), #ff7a5c); transition: width 0.4s; }
+.tracker .tick { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255, 255, 255, 0.8); }
+
+/* Gear by owner */
+.gear-owner h3 { font-size: 1.1rem; margin: 14px 0 6px; color: var(--ink-2); }
+.gear-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.gear-row input { padding: 7px 9px; font-size: 0.9rem; }
+.gear-row .kind { width: 22px; text-align: center; }
+@media (max-width: 480px) { .gear-row { flex-wrap: wrap; } .gear-row input { max-width: none !important; flex: 1 1 100%; } }
+.skifast { border-top: 4px solid var(--red); }
+
+/* Multi-piece booking */
+.piece { position: relative; border: 1.5px solid var(--line); border-left: 5px solid var(--navy); padding: 16px 18px 12px; margin: 0; background: #fbfcfd; min-width: 0; }
+.piece legend { font-family: var(--display); font-weight: 800; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0 8px; }
+.piece .piece-remove { position: absolute; top: -6px; right: 12px; background: #fff; }
+.piece-total { text-align: right; font-family: var(--display); font-weight: 800; font-size: 1.3rem; color: var(--navy); }
+.piece-total s { color: var(--muted); font-weight: 600; margin-right: 6px; }
+
+/* Bevel info bubble */
+.bevel-info { margin-top: 2px; }
+.info-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 4px 0; color: var(--navy); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.info-btn span { width: 22px; height: 22px; border-radius: 50%; background: var(--navy); color: #fff; display: inline-grid; place-items: center; font-family: Georgia, serif; font-style: italic; font-weight: 700; text-decoration: none; }
+.info-bubble { position: relative; margin-top: 10px; background: #fff; border: 1.5px solid var(--navy); padding: 18px 20px; font-size: 0.93rem; box-shadow: 0 10px 28px rgba(8, 18, 30, 0.12); }
+.info-bubble::before { content: ""; position: absolute; top: -9px; left: 24px; width: 16px; height: 16px; background: #fff; border-left: 1.5px solid var(--navy); border-top: 1.5px solid var(--navy); transform: rotate(45deg); }
+.info-bubble h4 { font-family: var(--display); text-transform: uppercase; font-size: 1.15rem; margin: 18px 0 6px; letter-spacing: 0.03em; }
+.info-bubble p { margin: 6px 0; }
+.info-bubble ul { margin: 8px 0; padding-left: 20px; }
+.info-bubble table { margin: 8px 0; }
+.info-bubble td, .info-bubble th { padding: 6px 10px; font-size: 0.88rem; }
+.presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 16px 0 8px; }
+.preset { display: flex; flex-direction: column; gap: 4px; padding: 12px; background: var(--ice); border-top: 3px solid var(--red); }
+.preset span { font-family: var(--display); font-weight: 700; font-size: 1.1rem; }
+.preset small { color: var(--ink-2); flex: 1; }
+.preset .btn { align-self: flex-start; background: #fff; }
+.caution { background: #fff6e5; border-left: 4px solid var(--warn); padding: 10px 12px; }
+
+/* Conditions & forecast */
+.weather { color: var(--ink); }
+.weather-search { position: relative; }
+.weather-results { position: absolute; z-index: 5; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px; list-style: none; background: #fff; border: 1.5px solid var(--navy); box-shadow: 0 10px 24px rgba(8, 18, 30, 0.18); max-height: 280px; overflow: auto; }
+.weather-results button { width: 100%; text-align: left; border: 0; background: none; padding: 8px 10px; font: inherit; cursor: pointer; color: var(--ink); }
+.weather-results button:hover { background: var(--ice); }
+.cond { margin-top: 14px; }
+.cond-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+.cond-now { font-family: var(--display); font-weight: 800; font-size: 2.6rem; line-height: 1; color: var(--navy); display: flex; align-items: center; gap: 6px; }
+.cond-now span { font-size: 2rem; }
+.cond-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); margin: 12px 0; border: 1px solid var(--line); }
+.cond-grid > div { background: #fff; padding: 10px 12px; }
+.cond-grid small { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.cond-grid b { font-family: var(--display); font-size: 1.7rem; font-weight: 800; color: var(--navy); }
+.cond-grid .unit { font-size: 0.9rem; color: var(--muted); }
+.cond-wax { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.forecast { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+.forecast > div { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; background: var(--ice); text-align: center; }
+.forecast small { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; }
+.forecast .ico { font-size: 1.5rem; }
+.forecast b { font-family: var(--display); font-size: 1.3rem; }
+.forecast .snow { font-size: 0.78rem; color: var(--navy); font-weight: 600; min-height: 1em; }
+@media (max-width: 560px) { .forecast { grid-template-columns: repeat(4, 1fr); } .cond-grid { grid-template-columns: repeat(2, 1fr); } }
+.section.dark h3 { color: #fff; }
+.section.dark .weather h3 { color: var(--ink); }
+.section.dark .weather .muted { color: var(--muted); }
+
+/* Polls and community */
+.poll-options { display: grid; gap: 8px; }
+.poll-options .btn { justify-content: flex-start; text-transform: none; font-family: inherit; font-size: 1rem; font-weight: 600; letter-spacing: 0; }
+.poll-bars { display: grid; gap: 8px; }
+.poll-bars .bar { position: relative; display: flex; justify-content: space-between; gap: 10px; padding: 8px 12px; background: var(--ice); overflow: hidden; }
+.poll-bars .bar i { position: absolute; inset: 0 auto 0 0; background: #c9d9ea; z-index: 0; }
+.poll-bars .bar.lead i { background: #f7c4bb; }
+.poll-bars .bar.mine { box-shadow: inset 0 0 0 2px var(--navy); }
+.poll-bars .bar span, .poll-bars .bar b { position: relative; z-index: 1; }
+.poll-bars .bar b { font-family: var(--display); }
+.pic-week img { display: block; width: calc(100% + 48px); margin: 12px -24px 0; aspect-ratio: 4 / 3; object-fit: cover; }
+.runs { list-style: none; padding: 0; margin: 0 0 12px; }
+.runs li { padding: 6px 0; border-bottom: 1px solid var(--line); }
+
+/* About page */
+.about { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: start; }
+.about-copy p { font-size: 1.08rem; color: var(--ink-2); }
+.about-lead { margin: 0; }
+.about-lead img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%, 0 8%); }
+.about figcaption, .about-gallery figcaption { font-size: 0.88rem; color: var(--muted); margin-top: 6px; }
+.about-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 40px; }
+.about-gallery figure, .winners figure { margin: 0; }
+.about-gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+@media (max-width: 860px) { .about { grid-template-columns: 1fr; } .about-lead { order: -1; } .about-lead img { aspect-ratio: 16 / 10; } }
+.winners { display: grid; gap: 16px; }
+.winners img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; }
+.winners figcaption { padding: 8px 0; }
+
+/* Tags: piece count and owner */
+.tag .code .of { margin-left: auto; margin-right: 0.36in; font-family: inherit; font-size: 12pt; border: 2px solid #000; border-radius: 4px; padding: 0 6px; }
+.tag .name .owner { font-weight: 600; font-size: 12pt; }

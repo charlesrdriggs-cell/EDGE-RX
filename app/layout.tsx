@@ -30,6 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Link>
             <span className="spacer" />
             <Link href="/#services" className="hide-sm">Services</Link>
+            <Link href="/about" className="hide-sm">About</Link>
             <Link href="/shop" className="hide-sm">Shop</Link>
             {user?.role === "operator" && <Link href="/admin">Dashboard</Link>}
             {user ? (
@@ -54,6 +55,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
             <div className="flex" style={{ gap: 18 }}>
               <Link href="/#services">Services</Link>
+              <Link href="/about">About us</Link>
+              <Link href="/#conditions">Conditions</Link>
+              <Link href="/pic-of-the-week">Pic of the week</Link>
+              <Link href="/polls">Polls</Link>
               <Link href="/book">Book</Link>
               <Link href="/shop">Shop</Link>
               <Link href="/account">Account</Link>

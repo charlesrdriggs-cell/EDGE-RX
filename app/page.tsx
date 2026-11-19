@@ -1,6 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { SERVICES, BASE_REPAIR, money } from "@/lib/services";
+import { SERVICES, BASE_REPAIR, LESSON, money, fmtDate } from "@/lib/services";
+import { getCharity, earlySeasonActive, earlySeasonEnd, mountainTally, recentBestRuns } from "@/lib/site";
+import { activePoll } from "@/lib/polls";
+import { currentWinner, PIC_PRIZE } from "@/lib/pics";
+import { RESORTS } from "@/lib/weather";
+import WeatherWidget from "@/app/components/WeatherWidget";
+import PollCard from "@/app/components/PollCard";
 import { getPrices } from "@/lib/pricing";
 import { PHOTOS } from "@/lib/images";
 import { getServicePhotos } from "@/lib/pricing";
@@ -8,13 +14,20 @@ import { mediaUrl } from "@/lib/media";
 
 const TICKER = [
   "Stone grind", "Edge sharpen & bevel", "Hot wax to spec", "Diamond polish",
-  "Base 0.5°–0.7°", "Side edge 1°–5°", "Free pickup & drop off", "Race wax",
+  "Base 0.5°–0.7°", "Side edge 1°–5°", "Free pickup & drop off", "Skis & snowboards", "#SKIFAST",
 ];
 
-export default function Home() {
+export default async function Home() {
   const prices = getPrices();
   const services = [SERVICES.basic, SERVICES.race];
   const photos = getServicePhotos();
+  const charity = getCharity();
+  const promoEnd = earlySeasonActive() ? earlySeasonEnd() : null;
+  const poll = activePoll();
+  const winner = currentWinner();
+  const mountains = mountainTally("home_mountain", 6);
+  const runs = recentBestRuns(5);
+  const topMountain = Math.max(...mountains.rows.map((m) => m.n), 1);
   return (
     <main>
       {/* Hero */}
@@ -61,6 +74,23 @@ export default function Home() {
         <div>{[...TICKER, ...TICKER].map((t, i) => <span key={i}>{t}</span>)}</div>
       </div>
 
+      {/* Charity notice */}
+      <section className="container">
+        <div className="charity">
+          <span className="heart" aria-hidden>♥</span>
+          <div>
+            <strong>Every tune gives back.</strong> A portion of our proceeds supports local charities, including the{" "}
+            {charity.url ? <a href={charity.url} target="_blank" rel="noopener">{charity.name}</a> : charity.name}.
+          </div>
+          {charity.totalCents > 0 && (
+            <div className="raised">
+              <b>{money(charity.totalCents)}</b>
+              <small>donated{charity.asOf ? ` as of ${fmtDate(charity.asOf, true)}` : ""}</small>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Services */}
       <section className="section" id="services">
         <div className="container">
@@ -69,7 +99,7 @@ export default function Home() {
               <span className="eyebrow">The menu</span>
               <h2>Pick your tune</h2>
             </div>
-            <p className="muted">Flat price per pair of skis or snowboard. Pickup and return are always included.</p>
+            <p className="muted">Flat price per pair of skis or per snowboard. Pickup and return are always included.</p>
           </div>
           <div className="grid-2">
             {services.map((s) => (
@@ -79,7 +109,7 @@ export default function Home() {
                   {s.id === "race" ? "Race prep" : "Most popular"}
                 </span>
                 <h3 style={{ marginTop: 14, marginBottom: 0 }}>{s.name}</h3>
-                <div className="price">{money(prices[s.id])}<small>/ pair</small></div>
+                <div className="price">{money(prices[s.id])}<small>/ {s.id === "basic" ? "pair or board" : "pair"}</small></div>
                 <p className="muted tagline">{s.tagline}</p>
                 <ul>{s.includes.map((i) => <li key={i}>{i}</li>)}</ul>
                 <Link href={`/book?service=${s.id}`} className={`btn ${s.id === "race" ? "accent" : ""}`}>
@@ -95,6 +125,65 @@ export default function Home() {
               <div className="muted">Core shots and gouges filled before your tune.</div>
             </div>
             <div className="price">+{money(prices.repair)}</div>
+          </div>
+          <div className="card lesson-card">
+            {photos.lesson && <img src={mediaUrl(photos.lesson)!} alt={LESSON.name} className="addon-photo" />}
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <span className="badge accent">New · {LESSON.length}</span>
+              <h3 style={{ margin: "8px 0 4px" }}>{LESSON.name}</h3>
+              <div className="muted">{LESSON.tagline}</div>
+              <div style={{ marginTop: 6 }}><strong>Pro tip:</strong> {LESSON.proTip}</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div className="price">{money(prices.lesson)}</div>
+              <Link href="/book/learn" className="btn sm accent">Book a session</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Promotions */}
+      <section className="section" style={{ paddingTop: 0 }} id="promos">
+        <div className="container grid-2">
+          {promoEnd && (
+            <div className="card promo red">
+              <span className="eyebrow">Early season · until {fmtDate(promoEnd)}</span>
+              <h2>Tune 3, get 1 free</h2>
+              <p className="muted">Book four pieces on one pickup by {fmtDate(promoEnd)} and the fourth tune is on us. Get the whole family ready for opening day.</p>
+              <Link href="/book" className="btn accent">Book the family</Link>
+            </div>
+          )}
+          <div className="card promo">
+            <span className="eyebrow">Ski team promo</span>
+            <h2>#SKIFAST · {money(prices.skifast)}</h2>
+            <p className="muted">
+              School and club racers get a full Performance/Race Day Tune for {money(prices.skifast)}. Register your racer&apos;s
+              name, age and school or team on your account, then pick them when you book.
+            </p>
+            <Link href="/account#skifast" className="btn">Register a racer</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Mountain tools */}
+      <section className="section dark" id="conditions">
+        <div className="container">
+          <div className="section-head">
+            <div>
+              <span className="eyebrow">Before you go</span>
+              <h2>Conditions &amp; forecast</h2>
+            </div>
+            <p className="muted">Check new snow at your mountain and the week ahead at your destination, then pick the wax to match.</p>
+          </div>
+          <div className="grid-2">
+            <div>
+              <h3>Resort conditions</h3>
+              <WeatherWidget mode="conditions" resorts={RESORTS} />
+            </div>
+            <div>
+              <h3>Destination forecast</h3>
+              <WeatherWidget mode="forecast" resorts={RESORTS} />
+            </div>
           </div>
         </div>
       </section>
@@ -118,6 +207,67 @@ export default function Home() {
                 <p className="muted" style={{ margin: 0 }}>{d}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Community */}
+      <section className="section" id="community">
+        <div className="container">
+          <div className="section-head">
+            <div>
+              <span className="eyebrow">The Edge RX crew</span>
+              <h2>Community</h2>
+            </div>
+          </div>
+          <div className="grid-3">
+            <div className="card pic-week">
+              <span className="eyebrow">Pic of the week</span>
+              {winner ? (
+                <>
+                  <img src={mediaUrl(winner.image_id)!} alt={`Pic of the week by ${winner.name} at ${winner.place}`} />
+                  <h3 style={{ margin: "12px 0 2px" }}>{winner.name}</h3>
+                  <div className="muted">📍 {winner.place}</div>
+                  <p style={{ fontStyle: "italic", margin: "8px 0 0" }}>&ldquo;{winner.why}&rdquo;</p>
+                </>
+              ) : (
+                <p className="muted">Our first winner is coming soon. Could be you!</p>
+              )}
+              <p className="hint">Winners get their pic posted here and a {PIC_PRIZE}.</p>
+              <Link href="/pic-of-the-week" className="btn sm accent">Enter your pic</Link>
+            </div>
+            {poll ? <PollCard poll={poll} /> : (
+              <div className="card poll">
+                <span className="eyebrow">Poll</span>
+                <p className="muted">No poll running right now. <Link href="/polls">See past polls →</Link></p>
+              </div>
+            )}
+            <div className="card">
+              <span className="eyebrow">Where Edge RX skis</span>
+              <h3 style={{ marginTop: 8 }}>Home mountains</h3>
+              {mountains.rows.length === 0 ? (
+                <p className="muted">Add your home mountain and best run on <Link href="/account#details">your account</Link> to be counted.</p>
+              ) : (
+                <div className="poll-bars">
+                  {mountains.rows.map((m, i) => (
+                    <div key={m.label} className={`bar ${i === 0 ? "lead" : ""}`}>
+                      <i style={{ width: `${Math.round((m.n / topMountain) * 100)}%` }} />
+                      <span>{m.label}</span><b>{m.n}</b>
+                    </div>
+                  ))}
+                  <div className="hint">{mountains.total} customer{mountains.total === 1 ? "" : "s"} answered</div>
+                </div>
+              )}
+              {runs.length > 0 && (
+                <>
+                  <h3 style={{ marginTop: 16 }}>Best runs</h3>
+                  <ul className="runs">
+                    {runs.map((r, i) => <li key={i}><strong>{r.best_run}</strong>{r.home_mountain ? ` at ${r.home_mountain}` : ""} <span className="muted">· {r.first}</span></li>)}
+                  </ul>
+                </>
+              )}
+              <Link href="/account#details" className="more">Add yours →</Link>
+            </div>
           </div>
         </div>
       </section>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getPrices, getServicePhotos } from "@/lib/pricing";
 import { mediaUrl } from "@/lib/media";
 import PhotoUpload from "@/app/components/PhotoUpload";
-import { SERVICES, BASE_REPAIR, DEFAULT_PRICES, money } from "@/lib/services";
+import { SERVICES, BASE_REPAIR, LESSON, SKIFAST, DEFAULT_PRICES, money } from "@/lib/services";
 import ActionForm from "@/app/components/ActionForm";
 import { savePrices } from "@/app/actions";
 
@@ -15,7 +15,10 @@ export default async function Prices() {
     { key: "basic", label: SERVICES.basic.name, cents: p.basic, def: DEFAULT_PRICES.basic },
     { key: "race", label: SERVICES.race.name, cents: p.race, def: DEFAULT_PRICES.race },
     { key: "repair", label: `${BASE_REPAIR.name} (add-on)`, cents: p.repair, def: DEFAULT_PRICES.repair },
+    { key: "lesson", label: `${LESSON.name} (${LESSON.length})`, cents: p.lesson, def: DEFAULT_PRICES.lesson },
+    { key: "skifast", label: `${SKIFAST.name} (racer price for a ${SERVICES.race.name})`, cents: p.skifast, def: DEFAULT_PRICES.skifast },
   ];
+  const photoRows = rows.filter((r) => r.key !== "skifast");
   return (
     <div className="stack" style={{ maxWidth: 640 }}>
       <h1 style={{ margin: 0 }}>Services: prices &amp; photos</h1>
@@ -41,7 +44,7 @@ export default async function Prices() {
       <div className="card">
         <h2>Service photos</h2>
         <p className="muted" style={{ marginTop: 0 }}>Shown on the homepage service cards and the booking form.</p>
-        {rows.map((r) => (
+        {photoRows.map((r) => (
           <PhotoUpload
             key={`${r.key}-${photos[r.key as keyof typeof photos] ?? "none"}`}
             target={`service:${r.key}`}

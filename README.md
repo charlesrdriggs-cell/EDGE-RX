@@ -16,9 +16,27 @@ Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no d
 **Services and pricing** (defaults in `lib/services.ts`; change live prices from the dashboard)
 | Service | Price | Specs captured |
 |---|---|---|
-| Basic Ski Tune | $50 | Wax: Warm, All Season, Cold, Polar |
-| Race Day Tune | $65 | Base bevel 0.5° to 0.7°, side edge 1° to 5° |
+| Basic Ski & Snowboard Tune | $50 | Wax: Warm, All Season, Cold, Polar |
+| Performance/Race Day Tune | $65 | Base bevel 0.5° to 0.7°, side edge 1° to 5° (with an info bubble explaining both) |
+| #SKIFAST Ski Team Tune | $40 | Performance/Race Day Tune for a registered racer (name, age, school/team) |
 | Minor base repair (add-on) | +$15 | |
+| Learn to Tune Session (1.5 hrs, at the customer's house) | $200 | Booked at `/book/learn` |
+
+**Promotions and rewards**
+- Early season: tune 3, get 1 free. In one pickup, every 4th piece's tune (the lowest priced) is free when pickup is on or before the end date (default Dec 15, editable at `/admin/site`).
+- Rewards: $25 credit for every $250 spent (tunes once picked up or paid, shop orders delivered or paid, sessions done or paid). Progress tracker on the account page; credit shares the referral credit balance.
+
+**Bookings**
+- 48 hours' notice for pickups and sessions.
+- One booking can hold several pieces (a whole household). Each piece gets its own tag showing "N of total", the owner's name and the pickup spot.
+
+**Homepage and community**
+- Resort conditions search and destination 7-day forecast (Open-Meteo, see below), with a wax suggestion.
+- Charity notice (South Shore Foodbank) with an editable total and date (`/admin/site`).
+- Pic of the week contest (`/pic-of-the-week`, judged at `/admin/pics`).
+- Polls with an archive (`/polls`, managed at `/admin/polls`), plus a "Where Edge RX skis" tally of customers' home mountains and best runs.
+- About page (`/about`) with bio and photos edited at `/admin/about`.
+- Suggestions box on the account page (read at `/admin/suggestions`).
 
 **Operator (you)** at `/admin`
 - Order board with tabs (to pick up, in the shop, ready, returned) and counters for pickups today, due soon and overdue.
@@ -51,6 +69,7 @@ Your operator login is the `OPERATOR_EMAIL` / `OPERATOR_PASSWORD` from `.env`; t
 | **Resend** (resend.com) | Sends confirmation, "ready" and weekly reminder emails. Verify your domain so mail doesn't land in spam. | Free up to 3,000 emails/month | `RESEND_API_KEY`, `EMAIL_FROM` |
 | **Stripe** (stripe.com), optional | "Pay now" button on bookings via Stripe Checkout. Without it, customers pay at pickup and you mark orders paid. | 2.9% + 30¢ per card payment | `STRIPE_SECRET_KEY` |
 | **Hosting with a persistent disk** | SQLite stores data in a file, so the host must keep files between deploys. Railway, Render (with a disk) or Fly.io all work; set `DATABASE_PATH` to the mounted disk. Vercel/Netlify won't keep the file, so you'd swap to Postgres there. | ~$5 to $7/month | `DATABASE_PATH` |
+| **Open-Meteo** (open-meteo.com) | Resort conditions and destination forecasts. Works with no key; the free tier is for non-commercial use, so for the business take their API plan and paste the key. | Free to try, paid plan for commercial use | `OPEN_METEO_API_KEY` (optional) |
 | **A domain** | e.g. edgerx.com, for the site and email sending | ~$12/year | `APP_URL` |
 
 Until Resend is set up, emails are **saved to the outbox** at `/admin/reminders` instead of being sent, so everything still works end to end.

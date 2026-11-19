@@ -1,6 +1,6 @@
 import { all, type User } from "./db";
 import { sendEmail, BUSINESS_NAME, APP_URL } from "./email";
-import { fmtDate, todayISO, money } from "./services";
+import { fmtDate, todayISO, money, SERVICES } from "./services";
 import { getPrices } from "./pricing";
 
 /**
@@ -36,7 +36,7 @@ export async function sendWeeklyReminders() {
         ? `You told us you're skiing on ${fmtDate(trip, true)}. Book a pickup a few days before and your gear will be sharp and waxed when you leave.`
         : "Got a trip coming up? Schedule a pickup and we'll have your skis or board sharpened, waxed and back at your door before you go.",
       "",
-      `Basic Ski Tune ${money(prices.basic)} · Race Day Tune ${money(prices.race)} · Minor base repair +${money(prices.repair)}`,
+      `${SERVICES.basic.name} ${money(prices.basic)} · ${SERVICES.race.name} ${money(prices.race)} · Minor base repair +${money(prices.repair)}`,
       "Pickup and drop off included.",
       "",
       `Book a pickup: ${APP_URL}/book`,

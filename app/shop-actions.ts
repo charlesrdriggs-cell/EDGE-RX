@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { syncRewards, userIdForShopOrder } from "@/lib/rewards";
 import { revalidatePath } from "next/cache";
 import { get, run, tagCode } from "@/lib/db";
 import { requireUser, requireOperator } from "@/lib/auth";
@@ -109,11 +110,13 @@ export async function setShopStatus(fd: FormData) {
     // Re-opening a cancelled order would need stock taken again, so only flip pending <-> delivered.
     if (cur && cur.status !== "cancelled") run("UPDATE shop_orders SET status = ? WHERE id = ?", status, id);
   }
+  syncRewards(userIdForShopOrder(id));
   revalidatePath("/admin/shop");
 }
 
 export async function setShopPaid(fd: FormData) {
   await requireOperator();
   run("UPDATE shop_orders SET payment_status = ? WHERE id = ?", str(fd, "paid") === "1" ? "paid" : "unpaid", Number(fd.get("id")));
+  syncRewards(userIdForShopOrder(Number(fd.get("id"))));
   revalidatePath("/admin/shop");
 }

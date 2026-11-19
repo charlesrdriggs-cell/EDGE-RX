@@ -81,6 +81,7 @@ function init(): DatabaseSync {
 
   syncOperator(db);
   migrateReferrals(db);
+  migrateSiteUpdates(db);
   return db;
 }
 
@@ -121,6 +122,94 @@ function migrateReferrals(db: DatabaseSync) {
     );
     CREATE UNIQUE INDEX IF NOT EXISTS credits_one_reward_per_referral
       ON credits(referred_user_id) WHERE reason = 'referral';
+  `);
+}
+
+/**
+ * Second round of features: pickup spot, gear owners, home mountain / best run, multi-piece
+ * bookings, #SKIFAST racers, Learn to Tune sessions, suggestions, About page, polls and
+ * pic of the week. Safe to run on every start.
+ */
+function migrateSiteUpdates(db: DatabaseSync) {
+  const add = (t: string, c: string, def: string) => {
+    if (!hasColumn(db, t, c)) db.exec(`ALTER TABLE ${t} ADD COLUMN ${c} ${def}`);
+  };
+  add("users", "pickup_spot", "TEXT NOT NULL DEFAULT ''");
+  add("users", "home_mountain", "TEXT NOT NULL DEFAULT ''");
+  add("users", "best_run", "TEXT NOT NULL DEFAULT ''");
+  add("equipment", "owner_name", "TEXT NOT NULL DEFAULT ''");
+  // Pieces booked together share a group_id (the first order's id); null = a single-piece booking
+  add("orders", "group_id", "INTEGER");
+  add("orders", "racer_id", "INTEGER");
+  add("orders", "promo", "TEXT NOT NULL DEFAULT ''");
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS orders_group ON orders(group_id);
+    CREATE TABLE IF NOT EXISTS racers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      age INTEGER NOT NULL,
+      team TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS lessons (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      date TEXT NOT NULL,
+      time_pref TEXT NOT NULL,
+      people INTEGER NOT NULL DEFAULT 1,
+      notes TEXT NOT NULL DEFAULT '',
+      price_cents INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'requested',
+      payment_status TEXT NOT NULL DEFAULT 'unpaid',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS suggestions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      topic TEXT NOT NULL,
+      message TEXT NOT NULL,
+      is_read INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS about_photos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      image_id TEXT NOT NULL,
+      caption TEXT NOT NULL DEFAULT '',
+      sort INTEGER NOT NULL DEFAULT 100
+    );
+    CREATE TABLE IF NOT EXISTS pic_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      image_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      place TEXT NOT NULL,
+      why TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      gift_card_sent INTEGER NOT NULL DEFAULT 0,
+      won_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS polls (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      question TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      archived_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS poll_options (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      poll_id INTEGER NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
+      label TEXT NOT NULL,
+      sort INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS poll_votes (
+      poll_id INTEGER NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
+      option_id INTEGER NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
+      voter TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (poll_id, voter)
+    );
   `);
 }
 
@@ -173,9 +262,12 @@ export type User = {
   reminders_opt_in: number;
   next_trip_date: string | null;
   created_at: string;
+  pickup_spot: string;
+  home_mountain: string;
+  best_run: string;
 };
 
-export type Equipment = { id: number; user_id: number; kind: string; description: string };
+export type Equipment = { id: number; user_id: number; kind: string; description: string; owner_name: string };
 
 export type Order = {
   id: number;
@@ -197,6 +289,9 @@ export type Order = {
   created_at: string;
   service_cents: number | null;
   repair_cents: number | null;
+  group_id: number | null;
+  racer_id: number | null;
+  promo: string;
 };
 
 export type OrderRow = Order & {
@@ -204,14 +299,33 @@ export type OrderRow = Order & {
   customer_email: string;
   customer_phone: string;
   customer_address: string;
+  customer_pickup_spot: string;
   kind: string;
   description: string;
+  owner_name: string;
+  racer_name: string | null;
+  racer_team: string | null;
 };
 
 export const ORDER_ROW_SQL = `
   SELECT o.*, u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone,
-         u.address AS customer_address, e.kind, e.description
-  FROM orders o JOIN users u ON u.id = o.user_id JOIN equipment e ON e.id = o.equipment_id`;
+         u.address AS customer_address, u.pickup_spot AS customer_pickup_spot, e.kind, e.description, e.owner_name,
+         r.name AS racer_name, r.team AS racer_team
+  FROM orders o JOIN users u ON u.id = o.user_id JOIN equipment e ON e.id = o.equipment_id
+  LEFT JOIN racers r ON r.id = o.racer_id`;
+
+/** Piece N of a booking's total (multi-piece bookings print one tag per piece). Cancelled pieces don't count. */
+export function pieceNumbers(orders: { id: number; group_id: number | null }[]): Map<number, { n: number; total: number }> {
+  const out = new Map<number, { n: number; total: number }>();
+  const groups = [...new Set(orders.map((o) => o.group_id ?? o.id))];
+  for (const g of groups) {
+    const ids = all<{ id: number }>(
+      "SELECT id FROM orders WHERE (id = ? OR group_id = ?) AND status != 'cancelled' ORDER BY id", g, g
+    ).map((r) => r.id);
+    ids.forEach((id, i) => out.set(id, { n: i + 1, total: ids.length }));
+  }
+  return out;
+}
 
 export function tagCode(orderId: number) {
   return `T-${String(orderId).padStart(4, "0")}`;

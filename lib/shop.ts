@@ -52,6 +52,9 @@ const SEED: Omit<Product, "id" | "active" | "price_confirmed" | "image_id">[] = 
 ];
 
 let ready = false;
+export function ensureShop() {
+  ensure();
+}
 function ensure() {
   if (ready) return;
   db().exec(`

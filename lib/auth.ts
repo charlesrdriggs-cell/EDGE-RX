@@ -47,7 +47,7 @@ export async function currentUser(): Promise<User | null> {
   const userId = Number(payload.split(".")[0]);
   return (
     get<User>(
-      "SELECT id, email, name, phone, address, role, reminders_opt_in, next_trip_date, created_at FROM users WHERE id = ?",
+      "SELECT id, email, name, phone, address, role, reminders_opt_in, next_trip_date, created_at, pickup_spot, home_mountain, best_run FROM users WHERE id = ?",
       userId
     ) ?? null
   );

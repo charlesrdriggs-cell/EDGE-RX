@@ -27,6 +27,11 @@ export default async function Signup({ searchParams }: { searchParams: Promise<{
             <div className="field"><label>Phone</label><input name="phone" type="tel" required autoComplete="tel" /></div>
           </div>
           <div className="field"><label>Pickup &amp; drop off address</label><textarea name="address" rows={2} required autoComplete="street-address" /></div>
+          <div className="field">
+            <label>Where should we pick up your gear?</label>
+            <input name="pickup_spot" placeholder="Front porch, side yard, garage…" maxLength={200} />
+            <div className="hint" style={{ marginTop: 6 }}>Leave gear in an accessible place we can reach without anyone home.</div>
+          </div>
           <div className="field"><label>Password</label><input name="password" type="password" minLength={8} required autoComplete="new-password" /></div>
           <div className="field">
             <label>Next ski trip <span className="hint">(optional, so we can remind you to book)</span></label>
