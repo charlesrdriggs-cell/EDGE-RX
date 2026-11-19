@@ -42,7 +42,7 @@ Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no d
 - Order board with tabs (to pick up, in the shop, ready, returned) and counters for pickups today, due soon and overdue.
 - Change status (Scheduled → Picked up → In progress → Ready → Returned). Marking **Ready** emails the customer.
 - Mark orders paid or unpaid.
-- **Printable tags** (4 × 2.6 in, one per pair) with tag number, customer name, pickup date, due date, address, phone, gear description and service specs. Print one, all active, or all pickups for a date.
+- **Printable tags**: one per piece on Zebra 4" × 2.5" labels (print, or download ZPL at 203/300 dpi), or on letter paper (4 × 2.6 in) with tag number, customer name, pickup date, due date, address, phone, gear description and service specs. Print one, all active, or all pickups for a date.
 - **Prices** (`/admin/prices`): change tune and base repair prices without touching code. Bookings keep the price they were made at.
 - **Schedule & limits:** set a max number of pickups per day and block off dates (vacations, race weekends). Full or blocked days can't be picked when booking.
 - **Retail** (`/admin/shop`): orders to deliver, mark delivered or paid. **Products** (`/admin/shop/products`): add items, set prices and stock (blank = unlimited), hide or reorder them. Starter products ship with **placeholder prices** flagged until you save each one. Tune tags list any extras to bring back.
