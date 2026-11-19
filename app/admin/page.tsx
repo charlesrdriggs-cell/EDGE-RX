@@ -2,7 +2,8 @@ import Link from "next/link";
 import { amountDue } from "@/lib/referrals";
 import { all, get, tagCode, pieceNumbers, ORDER_ROW_SQL, type OrderRow } from "@/lib/db";
 import { SERVICES, STATUSES, STATUS_LABEL, fmtDate, money, specSummary, todayISO, addDays } from "@/lib/services";
-import { setStatus, setPaid } from "@/app/actions";
+import { setPaid } from "@/app/actions";
+import StatusSelect from "./StatusSelect";
 import { extrasByTuneOrder } from "@/lib/shop";
 
 const VIEWS = {
@@ -79,13 +80,12 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                       {fmtDate(o.due_date)}{overdue && <div>Overdue</div>}
                     </td>
                     <td>
-                      <form key={`${o.id}-${o.status}`} action={setStatus} className="inline-form">
-                        <input type="hidden" name="id" value={o.id} />
-                        <select name="status" defaultValue={o.status} aria-label="Status">
-                          {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-                        </select>
-                        <button className="btn sm">Save</button>
-                      </form>
+                      <StatusSelect
+                        key={`${o.id}-${o.status}`}
+                        id={o.id}
+                        status={o.status}
+                        options={STATUSES.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
+                      />
                     </td>
                     <td>
                       <form key={`${o.id}-${o.payment_status}`} action={setPaid} className="inline-form">

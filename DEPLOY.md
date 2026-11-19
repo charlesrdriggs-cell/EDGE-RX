@@ -57,7 +57,9 @@ The repo includes a GitHub Action (`.github/workflows/weekly-reminders.yml`) tha
    - `CRON_SECRET` = the same value you put in Railway
 2. To test it, go to the **Actions** tab → **Weekly reminders** → **Run workflow**. Then check **Reminders & emails** on your dashboard.
 
-To change the day or time, edit the `cron:` line in that file (it's in UTC).
+A second Action (`.github/workflows/daily-pickup-reminders.yml`) runs **every evening at 6 PM Eastern** and emails each customer whose pickup is tomorrow, asking them to leave their gear out. It uses the same two secrets. Test it from **Actions → Daily pickup reminders → Run workflow**, or with **Send tomorrow's pickup reminders now** on the dashboard.
+
+To change the day or time, edit the `cron:` line in either file (it's in UTC).
 
 ---
 

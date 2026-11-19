@@ -14,7 +14,7 @@ import {
 import { syncRewards, userIdForOrder } from "@/lib/rewards";
 import { earlySeasonFreeCount } from "@/lib/site";
 import { sendEmail, APP_URL, BUSINESS_NAME, emailProviderOn, emailFrom } from "@/lib/email";
-import { sendWeeklyReminders } from "@/lib/reminders";
+import { sendWeeklyReminders, sendPickupReminders } from "@/lib/reminders";
 import { paymentsEnabled, createCheckout } from "@/lib/payments";
 import { pickupUnavailable, setDailyCapacity } from "@/lib/capacity";
 import { getPrices, setPrices } from "@/lib/pricing";
@@ -333,6 +333,12 @@ export async function sendRemindersNow(): Promise<void> {
   await requireOperator();
   const r = await sendWeeklyReminders();
   redirect(`/admin/reminders?sent=${r.sent}`);
+}
+
+export async function sendPickupRemindersNow(): Promise<void> {
+  await requireOperator();
+  const r = await sendPickupReminders();
+  redirect(`/admin/reminders?pickup=${r.sent}`);
 }
 
 export async function sendTestEmail(_: FormState, fd: FormData): Promise<FormState> {
