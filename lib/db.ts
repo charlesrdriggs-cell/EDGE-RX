@@ -147,6 +147,7 @@ function migrateSiteUpdates(db: DatabaseSync) {
   if (hasPolls) {
     add("poll_options", "is_other", "INTEGER NOT NULL DEFAULT 0");
     add("poll_votes", "other_text", "TEXT NOT NULL DEFAULT ''");
+    add("poll_votes", "other_hidden", "INTEGER NOT NULL DEFAULT 0");
   }
   db.exec(`
     CREATE INDEX IF NOT EXISTS orders_group ON orders(group_id);
@@ -215,6 +216,7 @@ function migrateSiteUpdates(db: DatabaseSync) {
       option_id INTEGER NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
       voter TEXT NOT NULL,
       other_text TEXT NOT NULL DEFAULT '',
+      other_hidden INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       PRIMARY KEY (poll_id, voter)
     );

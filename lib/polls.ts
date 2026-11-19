@@ -3,7 +3,7 @@ import { all, get, run } from "./db";
 export type Poll = { id: number; question: string; status: "active" | "archived"; created_at: string; archived_at: string | null };
 export type PollOption = { id: number; label: string; votes: number; pct: number; is_other: number };
 export type PollResult = Poll & { total: number; options: PollOption[] };
-export type WriteIn = { text: string; n: number };
+export type WriteIn = { text: string; n: number; hidden: number };
 
 export const VOTER_COOKIE = "voter";
 /** Most answers the operator can set on one poll (an "Other" write-in can be added on top). */
@@ -20,13 +20,22 @@ export function pollResults(p: Poll): PollResult {
   return { ...p, total, options: options.map((o) => ({ ...o, pct: total ? Math.round((o.votes / total) * 100) : 0 })) };
 }
 
-/** Customers' own answers on a poll, grouped case-insensitively, most common first. */
-export function writeIns(pollId: number, limit = 100): WriteIn[] {
+/**
+ * Customers' own answers on a poll, grouped case-insensitively, most common first.
+ * Public lists leave out answers the operator hid; the dashboard sees everything.
+ */
+export function writeIns(pollId: number, opts: { includeHidden?: boolean; limit?: number } = {}): WriteIn[] {
   return all<WriteIn>(
-    `SELECT MIN(TRIM(other_text)) AS text, COUNT(*) AS n FROM poll_votes
-     WHERE poll_id = ? AND TRIM(other_text) != '' GROUP BY LOWER(TRIM(other_text)) ORDER BY n DESC, text LIMIT ?`,
-    pollId, limit
+    `SELECT MIN(TRIM(other_text)) AS text, COUNT(*) AS n, MAX(other_hidden) AS hidden FROM poll_votes
+     WHERE poll_id = ? AND TRIM(other_text) != '' ${opts.includeHidden ? "" : "AND other_hidden = 0"}
+     GROUP BY LOWER(TRIM(other_text)) ORDER BY n DESC, text LIMIT ?`,
+    pollId, opts.limit ?? 100
   );
+}
+
+/** Hide (or show again) a write-in answer from the public results. */
+export function setWriteInHidden(pollId: number, text: string, hidden: boolean) {
+  run("UPDATE poll_votes SET other_hidden = ? WHERE poll_id = ? AND LOWER(TRIM(other_text)) = LOWER(TRIM(?))", hidden ? 1 : 0, pollId, text);
 }
 
 /** The poll shown on the homepage: the newest active one. */
@@ -66,7 +75,7 @@ export function castVote(pollId: number, optionId: number, voter: string, otherT
   if (opt.is_other && !text) return false;
   run(
     `INSERT INTO poll_votes (poll_id, option_id, voter, other_text) VALUES (?, ?, ?, ?)
-     ON CONFLICT(poll_id, voter) DO UPDATE SET option_id = excluded.option_id, other_text = excluded.other_text, created_at = datetime('now')`,
+     ON CONFLICT(poll_id, voter) DO UPDATE SET option_id = excluded.option_id, other_text = excluded.other_text, other_hidden = 0, created_at = datetime('now')`,
     pollId, optionId, voter, text
   );
   return true;

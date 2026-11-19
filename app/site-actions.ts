@@ -9,7 +9,7 @@ import { requireUser, requireOperator, currentUser } from "@/lib/auth";
 import { saveImage, deleteImage } from "@/lib/media";
 import { sendEmail, APP_URL, BUSINESS_NAME } from "@/lib/email";
 import { setSetting, SUGGESTION_TOPICS, LESSON_TIMES } from "@/lib/site";
-import { castVote, createPoll, VOTER_COOKIE, MAX_POLL_OPTIONS } from "@/lib/polls";
+import { castVote, createPoll, setWriteInHidden, VOTER_COOKIE, MAX_POLL_OPTIONS } from "@/lib/polls";
 import { PIC_WHY_MAX, PIC_MAX_PER_WEEK, entriesThisWeek } from "@/lib/pics";
 import { getPrices } from "@/lib/pricing";
 import { syncRewards } from "@/lib/rewards";
@@ -158,6 +158,12 @@ export async function savePoll(_: FormState, fd: FormData): Promise<FormState> {
   createPoll(question, unique, allowOther);
   revalidatePath("/", "layout");
   return { ok: "Poll is live on the homepage." };
+}
+
+export async function toggleWriteIn(fd: FormData) {
+  await requireOperator();
+  setWriteInHidden(Number(fd.get("poll_id")), String(fd.get("text") ?? ""), fd.get("hide") === "1");
+  revalidatePath("/", "layout");
 }
 
 export async function setPollStatus(fd: FormData) {
