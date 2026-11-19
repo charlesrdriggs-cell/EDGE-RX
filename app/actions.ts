@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { attachReferrer, applyCreditToOrder, refundOrderCredit, maybeRewardReferral, QUALIFYING_STATUSES } from "@/lib/referrals";
 import { get, run, all, type Order, type Equipment } from "@/lib/db";
 import { currentUser, startSession, endSession, requireUser, requireOperator } from "@/lib/auth";
+import { homeFor } from "@/lib/staff";
 import {
   SERVICES, WAX_SPECS, BASE_BEVELS, SIDE_EDGES, STATUSES, orderPrice, money, fmtDate,
   specSummary, todayISO, addDays, NOTICE_DAYS, MAX_PIECES, type ServiceId,
@@ -56,7 +57,7 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
   );
   if (!u || !bcrypt.compareSync(password, u.password_hash)) return { error: "Wrong email or password." };
   await startSession(u.id);
-  redirect(safeNext(str(fd, "next")) || (u.role === "operator" ? "/admin" : "/account"));
+  redirect(safeNext(str(fd, "next")) || homeFor(u.role));
 }
 
 export async function logout() {
@@ -395,7 +396,7 @@ export async function resetPassword(_: FormState, fd: FormData): Promise<FormSta
   run("UPDATE password_resets SET used = 1 WHERE user_id = ?", row.user_id);
   await startSession(row.user_id);
   const role = get<{ role: string }>("SELECT role FROM users WHERE id = ?", row.user_id)?.role;
-  redirect(role === "operator" ? "/admin" : "/account");
+  redirect(homeFor(role));
 }
 
 /* ---------- Pickup capacity ---------- */

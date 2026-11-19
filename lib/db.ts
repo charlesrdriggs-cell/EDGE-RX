@@ -82,11 +82,19 @@ function init(): DatabaseSync {
   syncOperator(db);
   migrateReferrals(db);
   migrateSiteUpdates(db);
+  migrateStaff(db);
   return db;
 }
 
 function hasColumn(db: DatabaseSync, table: string, col: string) {
   return db.prepare(`PRAGMA table_info(${table})`).all().some((c) => (c as { name: string }).name === col);
+}
+
+/** Drivers: who picks up and who delivers each piece. Safe to run on every start. */
+function migrateStaff(db: DatabaseSync) {
+  for (const c of ["pickup_driver_id", "delivery_driver_id"]) {
+    if (!hasColumn(db, "orders", c)) db.exec(`ALTER TABLE orders ADD COLUMN ${c} INTEGER REFERENCES users(id) ON DELETE SET NULL`);
+  }
 }
 
 /** Referral program tables and columns. Safe to run on every start. */
@@ -268,7 +276,7 @@ export type User = {
   name: string;
   phone: string;
   address: string;
-  role: "customer" | "operator";
+  role: "customer" | "operator" | "driver";
   reminders_opt_in: number;
   next_trip_date: string | null;
   created_at: string;
@@ -302,6 +310,8 @@ export type Order = {
   group_id: number | null;
   racer_id: number | null;
   promo: string;
+  pickup_driver_id: number | null;
+  delivery_driver_id: number | null;
 };
 
 export type OrderRow = Order & {

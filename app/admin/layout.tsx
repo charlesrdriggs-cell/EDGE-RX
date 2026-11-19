@@ -23,6 +23,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin/polls" className="btn light sm">Polls</Link>
         <Link href="/admin/pics" className="btn light sm">Pic of the week{pics ? ` (${pics})` : ""}</Link>
         <Link href="/admin/suggestions" className="btn light sm">Suggestions{unread ? ` (${unread})` : ""}</Link>
+        <Link href="/admin/dispatch" className="btn light sm">Assign drivers</Link>
+        <Link href="/admin/team" className="btn light sm">Team &amp; drivers</Link>
       </div>
       {children}
     </main>
