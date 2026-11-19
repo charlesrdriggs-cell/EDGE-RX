@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { pollsByStatus } from "@/lib/polls";
+import { pollsByStatus, writeIns } from "@/lib/polls";
 import { fmtDate } from "@/lib/services";
 import PollCard, { PollBars } from "@/app/components/PollCard";
 
@@ -21,7 +21,7 @@ export default function Polls() {
             <div key={p.id} className="card poll">
               <span className="hint">{fmtDate(p.created_at.slice(0, 10), true)}{p.archived_at ? ` to ${fmtDate(p.archived_at.slice(0, 10), true)}` : ""}</span>
               <h3 style={{ marginTop: 6 }}>{p.question}</h3>
-              <PollBars poll={p} />
+              <PollBars poll={p} writeIns={writeIns(p.id, { limit: 12 })} />
             </div>
           ))}
         </div>

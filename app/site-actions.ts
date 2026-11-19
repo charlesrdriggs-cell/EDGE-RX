@@ -9,7 +9,7 @@ import { requireUser, requireOperator, currentUser } from "@/lib/auth";
 import { saveImage, deleteImage } from "@/lib/media";
 import { sendEmail, APP_URL, BUSINESS_NAME } from "@/lib/email";
 import { setSetting, SUGGESTION_TOPICS, LESSON_TIMES } from "@/lib/site";
-import { castVote, createPoll, VOTER_COOKIE } from "@/lib/polls";
+import { castVote, createPoll, setWriteInHidden, VOTER_COOKIE, MAX_POLL_OPTIONS } from "@/lib/polls";
 import { PIC_WHY_MAX, PIC_MAX_PER_WEEK, entriesThisWeek } from "@/lib/pics";
 import { getPrices } from "@/lib/pricing";
 import { syncRewards } from "@/lib/rewards";
@@ -142,20 +142,28 @@ export async function vote(fd: FormData) {
   }
   // Logged-in customers vote once per account, whatever device they use
   const u = await currentUser();
-  castVote(Number(fd.get("poll_id")), Number(fd.get("option_id")), u ? `user:${u.id}` : voter);
+  castVote(Number(fd.get("poll_id")), Number(fd.get("option_id")), u ? `user:${u.id}` : voter, str(fd, "other_text"));
   revalidatePath("/");
 }
 
 export async function savePoll(_: FormState, fd: FormData): Promise<FormState> {
   await requireOperator();
   const question = str(fd, "question").slice(0, 200);
-  const options = str(fd, "options").split("\n").map((s) => s.trim().slice(0, 80)).filter(Boolean);
+  const options = fd.getAll("option").map((v) => String(v).trim().slice(0, 80)).filter(Boolean);
   const unique = [...new Set(options)];
+  const allowOther = !!fd.get("allow_other");
   if (!question) return { error: "Write the question." };
-  if (unique.length < 2 || unique.length > 8) return { error: "Give 2 to 8 answers, one per line." };
-  createPoll(question, unique);
+  if (unique.length > MAX_POLL_OPTIONS) return { error: `Give up to ${MAX_POLL_OPTIONS} answers.` };
+  if (unique.length + (allowOther ? 1 : 0) < 2) return { error: "Give at least 2 answers (or 1 answer plus the write-in choice)." };
+  createPoll(question, unique, allowOther);
   revalidatePath("/", "layout");
   return { ok: "Poll is live on the homepage." };
+}
+
+export async function toggleWriteIn(fd: FormData) {
+  await requireOperator();
+  setWriteInHidden(Number(fd.get("poll_id")), String(fd.get("text") ?? ""), fd.get("hide") === "1");
+  revalidatePath("/", "layout");
 }
 
 export async function setPollStatus(fd: FormData) {

@@ -1,4 +1,4 @@
-import { pollsByStatus } from "@/lib/polls";
+import { pollsByStatus, writeIns, MAX_POLL_OPTIONS } from "@/lib/polls";
 import { fmtDate } from "@/lib/services";
 import { mountainTally } from "@/lib/site";
 import ActionForm from "@/app/components/ActionForm";
@@ -33,10 +33,20 @@ export default function AdminPolls() {
       <div className="grid-2">
         <div className="card">
           <h2>New poll</h2>
-          <p className="muted" style={{ marginTop: 0 }}>The newest open poll shows on the homepage. Visitors vote once; logged-in customers once per account.</p>
+          <p className="muted" style={{ marginTop: 0 }}>The newest open poll shows on the homepage. Visitors vote once; logged-in customers once per account. Write-in answers show publicly with the results (after someone votes); use Hide to take one down.</p>
           <ActionForm action={savePoll} submit="Publish poll">
             <div className="field"><label>Question</label><input name="question" required maxLength={200} placeholder="What's your favorite wax temp?" /></div>
-            <div className="field"><label>Answers <span className="hint">(one per line, 2 to 8)</span></label><textarea name="options" rows={5} required /></div>
+            <div className="field">
+              <label>Answers <span className="hint">(up to {MAX_POLL_OPTIONS}; leave extras blank)</span></label>
+              <div style={{ display: "grid", gap: 6 }}>
+                {Array.from({ length: MAX_POLL_OPTIONS }, (_, i) => (
+                  <input key={i} name="option" placeholder={`Answer ${i + 1}`} maxLength={80} required={i < 1} />
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <label style={{ fontWeight: 400 }}><input type="checkbox" name="allow_other" defaultChecked /> Add an &ldquo;Other&rdquo; choice where customers type their own answer</label>
+            </div>
           </ActionForm>
         </div>
         <div className="card">
@@ -46,7 +56,7 @@ export default function AdminPolls() {
             <div key={p.id} style={{ borderTop: i ? "1px solid var(--line)" : 0, paddingTop: i ? 14 : 0, marginTop: i ? 14 : 0 }}>
               {i === 0 && <span className="badge accent">On the homepage</span>}
               <h3 style={{ marginTop: 6 }}>{p.question}</h3>
-              <PollBars poll={p} />
+              <PollBars poll={p} writeIns={writeIns(p.id, { includeHidden: true })} manage />
               <Actions id={p.id} archived={false} />
             </div>
           ))}
@@ -60,7 +70,7 @@ export default function AdminPolls() {
             <div key={p.id}>
               <span className="hint">Closed {p.archived_at ? fmtDate(p.archived_at.slice(0, 10), true) : ""}</span>
               <h3 style={{ marginTop: 4 }}>{p.question}</h3>
-              <PollBars poll={p} />
+              <PollBars poll={p} writeIns={writeIns(p.id, { includeHidden: true })} manage />
               <Actions id={p.id} archived />
             </div>
           ))}
