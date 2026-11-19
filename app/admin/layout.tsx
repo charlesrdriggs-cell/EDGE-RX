@@ -11,6 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="flex no-print" style={{ marginBottom: 20, gap: 8 }}>
         <Link href="/admin" className="btn light sm">Orders</Link>
         <Link href="/admin/tags" className="btn light sm">Print tags</Link>
+        <Link href="/admin/invoices" className="btn light sm">Invoices &amp; route sheet</Link>
         <Link href="/admin/schedule" className="btn light sm">Schedule &amp; limits</Link>
         <Link href="/admin/prices" className="btn light sm">Services &amp; prices</Link>
         <Link href="/admin/shop" className="btn light sm">Retail</Link>
