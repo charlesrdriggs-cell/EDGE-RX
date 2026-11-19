@@ -13,7 +13,7 @@ type Ledger = { id: number; name: string; amount_cents: number; reason: string; 
 type Customer = { id: number; name: string; email: string };
 
 const REASON: Record<string, string> = {
-  referral: "Referral reward", order: "Used on order", refund: "Returned (order cancelled)", adjustment: "Manual adjustment",
+  referral: "Referral reward", reward: "Rewards ($25 per $250)", order: "Used on order", refund: "Returned (order cancelled)", adjustment: "Manual adjustment",
 };
 
 export default async function Referrals() {

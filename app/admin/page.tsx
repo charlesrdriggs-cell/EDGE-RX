@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { amountDue } from "@/lib/referrals";
-import { all, get, tagCode, ORDER_ROW_SQL, type OrderRow } from "@/lib/db";
+import { all, get, tagCode, pieceNumbers, ORDER_ROW_SQL, type OrderRow } from "@/lib/db";
 import { SERVICES, STATUSES, STATUS_LABEL, fmtDate, money, specSummary, todayISO, addDays } from "@/lib/services";
 import { setStatus, setPaid } from "@/app/actions";
 import { extrasByTuneOrder } from "@/lib/shop";
@@ -20,6 +20,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const today = todayISO();
   const orders = all<OrderRow>(`${ORDER_ROW_SQL} WHERE ${VIEWS[view].where} ORDER BY ${VIEWS[view].order}, o.id`);
   const extras = extrasByTuneOrder(orders.map((o) => o.id));
+  const pieces = pieceNumbers(orders);
   const count = (sql: string, ...p: string[]) => (get<{ n: number }>(`SELECT COUNT(*) n FROM orders o WHERE ${sql}`, ...p)?.n ?? 0);
 
   const stats = [
@@ -57,14 +58,16 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                 const overdue = o.due_date < today && ["picked_up", "in_progress", "ready"].includes(o.status);
                 return (
                   <tr key={o.id}>
-                    <td style={{ whiteSpace: "nowrap" }}><Link href={`/orders/${o.id}`}><strong>{tagCode(o.id)}</strong></Link></td>
+                    <td style={{ whiteSpace: "nowrap" }}><Link href={`/orders/${o.id}`}><strong>{tagCode(o.id)}</strong></Link>
+                      {(pieces.get(o.id)?.total ?? 1) > 1 && <div className="muted">{pieces.get(o.id)!.n} of {pieces.get(o.id)!.total}</div>}</td>
                     <td>
                       <strong>{o.customer_name}</strong>
                       <div className="muted">{o.customer_phone}</div>
                       <div className="muted" style={{ maxWidth: 200 }}>{o.customer_address}</div>
+                      {o.customer_pickup_spot && <div className="muted" style={{ maxWidth: 200 }}>📍 {o.customer_pickup_spot}</div>}
                     </td>
                     <td>
-                      {o.kind === "snowboard" ? "🏂" : "⛷️"} {o.description}
+                      {o.kind === "snowboard" ? "🏂" : "⛷️"} {o.owner_name ? <strong>{o.owner_name}: </strong> : null}{o.description}
                       <div className="muted">{SERVICES[o.service].name} · {specSummary(o)}</div>
                       {o.notes && <div className="muted" style={{ fontStyle: "italic" }}>“{o.notes}”</div>}
                       {extras.get(o.id)?.map((x) => (
@@ -96,7 +99,10 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                         </button>
                       </form>
                     </td>
-                    <td><Link href={`/admin/tags?id=${o.id}`} className="btn sm light">Tag</Link></td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <Link href={`/admin/tags?id=${o.id}`} className="btn sm light">Tag</Link>
+                      {(pieces.get(o.id)?.total ?? 1) > 1 && <> <Link href={`/admin/tags?group=${o.group_id ?? o.id}`} className="btn sm light">All {pieces.get(o.id)!.total}</Link></>}
+                    </td>
                   </tr>
                 );
               })}

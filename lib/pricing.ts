@@ -1,7 +1,9 @@
 import { get, run } from "./db";
 import { DEFAULT_PRICES, type Prices } from "./services";
 
-const KEYS: Record<keyof Prices, string> = { basic: "price_basic", race: "price_race", repair: "price_repair" };
+const KEYS: Record<keyof Prices, string> = {
+  basic: "price_basic", race: "price_race", repair: "price_repair", lesson: "price_lesson", skifast: "price_skifast",
+};
 
 /** Current prices: the operator's saved values, or the defaults in lib/services.ts. */
 export function getPrices(): Prices {
@@ -23,12 +25,12 @@ export function setPrices(p: Prices) {
   }
 }
 
-export type PhotoKey = keyof Prices;
-export const PHOTO_KEYS: PhotoKey[] = ["basic", "race", "repair"];
+export type PhotoKey = "basic" | "race" | "repair" | "lesson";
+export const PHOTO_KEYS: PhotoKey[] = ["basic", "race", "repair", "lesson"];
 
 /** Uploaded photo ids for each service (null = none yet). */
 export function getServicePhotos(): Record<PhotoKey, string | null> {
-  const out = { basic: null, race: null, repair: null } as Record<PhotoKey, string | null>;
+  const out = { basic: null, race: null, repair: null, lesson: null } as Record<PhotoKey, string | null>;
   for (const k of PHOTO_KEYS) {
     out[k] = get<{ value: string }>("SELECT value FROM settings WHERE key = ?", `photo_${k}`)?.value || null;
   }
