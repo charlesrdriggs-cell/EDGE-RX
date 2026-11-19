@@ -74,9 +74,10 @@ export default async function OrderPage({
               paymentsEnabled() ? (
                 <form action={payOrder}><input type="hidden" name="id" value={o.id} /><button className="btn accent">Pay {money(amountDue(o))} now</button></form>
               ) : (
-                <span className="muted">Pay at pickup (cash, Venmo or card).</span>
+                <span className="muted">Pay your driver by Venmo, cash or check. Details are on your invoice.</span>
               )
             )}
+            {o.status !== "cancelled" && <Link href={`/orders/${o.id}/invoice`} className="btn light sm">{u.role === "operator" ? "Invoice & driver sheet" : "View invoice"}</Link>}
             {o.status === "scheduled" && u.role === "customer" && (
               <form action={cancelOrder}><input type="hidden" name="id" value={o.id} /><button className="btn ghost sm">{group.length > 1 ? "Cancel this piece" : "Cancel booking"}</button></form>
             )}

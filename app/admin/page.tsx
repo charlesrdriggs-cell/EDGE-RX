@@ -34,7 +34,10 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
     <div className="stack">
       <div className="flex between">
         <h1 style={{ margin: 0 }}>Orders</h1>
-        <Link href={`/admin/tags?date=${today}`} className="btn">Print today&apos;s pickup tags</Link>
+        <div className="flex" style={{ gap: 8 }}>
+          <Link href={`/admin/invoices?from=${today}&to=${today}`} className="btn light">Today&apos;s route sheet</Link>
+          <Link href={`/admin/tags?date=${today}`} className="btn">Print today&apos;s pickup tags</Link>
+        </div>
       </div>
       <div className="grid-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
         {stats.map(([l, n]) => (
@@ -100,6 +103,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                       </form>
                     </td>
                     <td style={{ whiteSpace: "nowrap" }}>
+                      <Link href={`/orders/${o.id}/invoice`} className="btn sm light">Invoice</Link>{" "}
                       <Link href={`/admin/tags?id=${o.id}`} className="btn sm light">Tag</Link>
                       {(pieces.get(o.id)?.total ?? 1) > 1 && <> <Link href={`/admin/tags?group=${o.group_id ?? o.id}`} className="btn sm light">All {pieces.get(o.id)!.total}</Link></>}
                     </td>
