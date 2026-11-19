@@ -142,6 +142,12 @@ function migrateSiteUpdates(db: DatabaseSync) {
   add("orders", "group_id", "INTEGER");
   add("orders", "racer_id", "INTEGER");
   add("orders", "promo", "TEXT NOT NULL DEFAULT ''");
+  // Polls: an optional "Other" answer where voters type their own reply
+  const hasPolls = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'poll_options'").get();
+  if (hasPolls) {
+    add("poll_options", "is_other", "INTEGER NOT NULL DEFAULT 0");
+    add("poll_votes", "other_text", "TEXT NOT NULL DEFAULT ''");
+  }
   db.exec(`
     CREATE INDEX IF NOT EXISTS orders_group ON orders(group_id);
     CREATE TABLE IF NOT EXISTS racers (
@@ -201,12 +207,14 @@ function migrateSiteUpdates(db: DatabaseSync) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       poll_id INTEGER NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
       label TEXT NOT NULL,
-      sort INTEGER NOT NULL DEFAULT 0
+      sort INTEGER NOT NULL DEFAULT 0,
+      is_other INTEGER NOT NULL DEFAULT 0
     );
     CREATE TABLE IF NOT EXISTS poll_votes (
       poll_id INTEGER NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
       option_id INTEGER NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
       voter TEXT NOT NULL,
+      other_text TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       PRIMARY KEY (poll_id, voter)
     );

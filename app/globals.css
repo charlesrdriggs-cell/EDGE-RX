@@ -399,3 +399,7 @@ footer .brand { font-family: var(--display); font-weight: 800; font-size: 1.4rem
 /* Tags: piece count and owner */
 .tag .code .of { margin-left: auto; margin-right: 0.36in; font-family: inherit; font-size: 12pt; border: 2px solid #000; border-radius: 4px; padding: 0 6px; }
 .tag .name .owner { font-weight: 600; font-size: 12pt; }
+.poll-other { display: flex; gap: 6px; align-items: stretch; }
+.poll-other input { padding: 9px 10px; }
+.write-ins { list-style: none; margin: 4px 0 4px 12px; padding: 0 0 0 10px; border-left: 2px solid var(--line); font-size: 0.9rem; }
+.write-ins li { padding: 2px 0; }

@@ -34,7 +34,7 @@ Built with Next.js 15 and SQLite (Node's built-in `node:sqlite`, so there's no d
 - Resort conditions search and destination 7-day forecast (Open-Meteo, see below), with a wax suggestion.
 - Charity notice (South Shore Foodbank) with an editable total and date (`/admin/site`).
 - Pic of the week contest (`/pic-of-the-week`, judged at `/admin/pics`).
-- Polls with an archive (`/polls`, managed at `/admin/polls`), plus a "Where Edge RX skis" tally of customers' home mountains and best runs.
+- Polls with up to 5 answers plus an optional "Other" write-in, and an archive (`/polls`, managed at `/admin/polls`, where write-ins are listed), plus a "Where Edge RX skis" tally of customers' home mountains and best runs.
 - About page (`/about`) with bio and photos edited at `/admin/about`.
 - Suggestions box on the account page (read at `/admin/suggestions`).
 
