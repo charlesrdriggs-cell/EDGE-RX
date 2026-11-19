@@ -142,6 +142,8 @@ function migrateSiteUpdates(db: DatabaseSync) {
   add("orders", "group_id", "INTEGER");
   add("orders", "racer_id", "INTEGER");
   add("orders", "promo", "TEXT NOT NULL DEFAULT ''");
+  // When the "we pick up tomorrow" email went out, so the daily job never sends it twice
+  add("orders", "pickup_reminded_at", "TEXT");
   // Polls: an optional "Other" answer where voters type their own reply
   const hasPolls = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'poll_options'").get();
   if (hasPolls) {

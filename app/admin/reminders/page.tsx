@@ -1,13 +1,13 @@
 import { all } from "@/lib/db";
-import { sendRemindersNow, sendTestEmail } from "@/app/actions";
+import { sendRemindersNow, sendPickupRemindersNow, sendTestEmail } from "@/app/actions";
 import { emailProviderOn, emailFrom } from "@/lib/email";
 import { currentUser } from "@/lib/auth";
 import ActionForm from "@/app/components/ActionForm";
 
 type Email = { id: number; to_email: string; subject: string; body: string; kind: string; delivery: string; sent_at: string };
 
-export default async function Reminders({ searchParams }: { searchParams: Promise<{ sent?: string }> }) {
-  const { sent } = await searchParams;
+export default async function Reminders({ searchParams }: { searchParams: Promise<{ sent?: string; pickup?: string }> }) {
+  const { sent, pickup } = await searchParams;
   const emails = all<Email>("SELECT * FROM emails ORDER BY id DESC LIMIT 100");
   const providerOn = emailProviderOn();
   const me = await currentUser();
@@ -28,6 +28,17 @@ export default async function Reminders({ searchParams }: { searchParams: Promis
           </p>
         )}
         <form action={sendRemindersNow}><button className="btn accent">Send reminders now</button></form>
+      </div>
+      {pickup !== undefined && <div className="notice">Sent {pickup} pickup reminder{pickup === "1" ? "" : "s"} for tomorrow.</div>}
+      <div className="card">
+        <h2>Pickup reminders</h2>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Every evening, customers with a pickup tomorrow get an email asking them to leave their gear out (one email per
+          customer, never twice for the same booking). A scheduler calls <code>/api/cron/daily</code>; you can also send
+          tomorrow&apos;s now. When you mark an order <strong>Ready</strong>, the customer automatically gets a
+          &ldquo;tuned and on its way&rdquo; email with the drop-off date.
+        </p>
+        <form action={sendPickupRemindersNow}><button className="btn accent">Send tomorrow&apos;s pickup reminders now</button></form>
       </div>
       <div className="card">
         <h2>Email setup</h2>
